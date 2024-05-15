@@ -1,12 +1,12 @@
 import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription } from '@moonjot/moon';
-interface CapacitiesPluginSettingsDescription extends PluginSettingsDescription {
+interface ClickupPluginSettingsDescription extends PluginSettingsDescription {
     token: {
         type: 'string';
         required: boolean;
         label: string;
         description: string;
     };
-    spaceId: {
+    listId: {
         type: 'string';
         required: boolean;
         label: string;
@@ -20,18 +20,18 @@ interface CapacitiesPluginSettingsDescription extends PluginSettingsDescription 
         default: string;
     };
 }
-interface CapacitiesPluginSettings extends MoonPluginSettings {
+interface ClickupPluginSettings extends MoonPluginSettings {
     token: string;
     template: string;
-    spaceId: string;
+    listId: string;
 }
 export default class extends MoonPlugin {
     name: string;
     logo: string;
-    settingsDescription: CapacitiesPluginSettingsDescription;
-    settings: CapacitiesPluginSettings;
+    settingsDescription: ClickupPluginSettingsDescription;
+    settings: ClickupPluginSettings;
     log: ((log: string) => void) | undefined;
-    constructor(props?: MoonPluginConstructorProps<CapacitiesPluginSettings>);
+    constructor(props?: MoonPluginConstructorProps<ClickupPluginSettings>);
     integration: {
         callback: ({ context, markdown }: {
             html: string;

@@ -16,38 +16,38 @@ class default_1 extends moon_1.MoonPlugin {
     constructor(props) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         super(props);
-        this.name = 'Capacities';
-        this.logo = 'https://capacities.io/capacities-logo.png';
+        this.name = 'Clickup';
+        this.logo = 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg';
         this.settingsDescription = {
             token: {
                 type: 'string',
                 required: true,
                 label: 'Token',
-                description: 'Capacities API token.'
+                description: 'Clickup API token.'
             },
-            spaceId: {
+            listId: {
                 type: 'string',
                 required: true,
                 label: 'Space Id',
-                description: 'Capacities Space Id.'
+                description: 'Clickup Space Id.'
             },
             template: {
                 type: 'text',
                 required: true,
                 label: 'Template of capture',
-                description: 'Format your note result inside Capacities. [Documentation](https://github.com/castroCrea/moon-capacities-plugin/blob/main/README.md)',
+                description: 'Format your note result inside Clickup. [Documentation](https://github.com/castroCrea/moon-clickup-plugin/blob/main/README.md)',
                 default: template_1.DEFAULT_TEMPLATE
             }
         };
         this.settings = {
             token: '',
-            spaceId: '',
+            listId: '',
             template: template_1.DEFAULT_TEMPLATE
         };
         this.integration = {
             callback: ({ context, markdown }) => __awaiter(this, void 0, void 0, function* () {
                 var _a, _b, _c;
-                if (!this.settings.spaceId)
+                if (!this.settings.listId)
                     return false;
                 const handleDateContent = (0, moon_utils_1.turnDate)({ content: this.settings.template });
                 const searchObj = Object.assign({ content: markdown }, context);
@@ -55,10 +55,10 @@ class default_1 extends moon_1.MoonPlugin {
                 const handleConditionContent = (_c = (_b = (0, moon_utils_1.handleConditions)({ content: handlePropertiesContent, searchObj })) === null || _b === void 0 ? void 0 : _b.trim()) !== null && _c !== void 0 ? _c : '';
                 const payload = {
                     mdText: handleConditionContent,
-                    spaceId: this.settings.spaceId,
+                    listId: this.settings.listId,
                     origin: 'commandPalette'
                 };
-                const response = yield fetch('https://api.capacities.io/save-to-daily-note', {
+                const response = yield fetch('https://api.clickup.io/save-to-daily-note', {
                     method: 'POST',
                     headers: {
                         Authorization: 'Bearer ' + this.settings.token,
@@ -69,7 +69,7 @@ class default_1 extends moon_1.MoonPlugin {
                 const jsonResponse = yield response.json();
                 return jsonResponse[0].success === true;
             }),
-            buttonIconUrl: 'https://capacities.io/capacities-logo.png'
+            buttonIconUrl: 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
         };
         if (!props)
             return;

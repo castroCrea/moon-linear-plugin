@@ -1,15 +1,15 @@
 import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription } from '@moonjot/moon'
-import { handleConditions, handleReplacingProperties, turnDate } from '@moonjot/moon-utils'
+import { extractTitleFromMarkdown, handleConditions, handleReplacingProperties, turnDate } from '@moonjot/moon-utils'
 import { DEFAULT_TEMPLATE } from './template'
 
-interface CapacitiesPluginSettingsDescription extends PluginSettingsDescription {
+interface ClickupPluginSettingsDescription extends PluginSettingsDescription {
   token: {
     type: 'string'
     required: boolean
     label: string
     description: string
   }
-  spaceId: {
+  listId: {
     type: 'string'
     required: boolean
     label: string
@@ -24,47 +24,46 @@ interface CapacitiesPluginSettingsDescription extends PluginSettingsDescription 
   }
 }
 
-interface CapacitiesPluginSettings extends MoonPluginSettings {
+interface ClickupPluginSettings extends MoonPluginSettings {
   token: string
   template: string
-  spaceId: string
 }
 
 export default class extends MoonPlugin {
-  name: string = 'Capacities'
-  logo: string = 'https://capacities.io/capacities-logo.png'
+  name: string = 'Clickup'
+  logo: string = 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
 
-  settingsDescription: CapacitiesPluginSettingsDescription = {
+  settingsDescription: ClickupPluginSettingsDescription = {
     token: {
       type: 'string',
       required: true,
       label: 'Token',
-      description: 'Capacities API token.'
+      description: 'Clickup API token.'
     },
-    spaceId: {
+    listId: {
       type: 'string',
       required: true,
       label: 'Space Id',
-      description: 'Capacities Space Id.'
+      description: 'Clickup Space Id.'
     },
     template: {
       type: 'text',
       required: true,
       label: 'Template of capture',
-      description: 'Format your note result inside Capacities. [Documentation](https://github.com/castroCrea/moon-capacities-plugin/blob/main/README.md)',
+      description: 'Format your note result inside Clickup. [Documentation](https://github.com/castroCrea/moon-clickup-plugin/blob/main/README.md)',
       default: DEFAULT_TEMPLATE
     }
   }
 
-  settings: CapacitiesPluginSettings = {
+  settings: ClickupPluginSettings = {
     token: '',
-    spaceId: '',
+    listId: '',
     template: DEFAULT_TEMPLATE
   }
 
   log: ((log: string) => void) | undefined
 
-  constructor (props?: MoonPluginConstructorProps<CapacitiesPluginSettings>) {
+  constructor (props?: MoonPluginConstructorProps<ClickupPluginSettings>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     super(props)
     if (!props) return
@@ -79,7 +78,7 @@ export default class extends MoonPlugin {
       context: Context
     }
     ) => {
-      if (!this.settings.spaceId) return false
+      if (!this.settings.listId) return false
       const handleDateContent = turnDate({ content: this.settings.template })
 
       const searchObj = {
@@ -89,15 +88,19 @@ export default class extends MoonPlugin {
 
       const handlePropertiesContent = handleReplacingProperties({ content: handleDateContent, searchObj }) ?? ''
 
-      const handleConditionContent = handleConditions({ content: handlePropertiesContent, searchObj })?.trim() ?? ''
+      let handleConditionContent = handleConditions({ content: handlePropertiesContent, searchObj })?.trim() ?? ''
+
+      const title = extractTitleFromMarkdown(handleConditionContent)
+
+      if (title) handleConditionContent = handleConditionContent.split('\n').slice(1).join('\n')
 
       const payload = {
-        mdText: handleConditionContent,
-        spaceId: this.settings.spaceId,
-        origin: 'commandPalette'
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        name: title || context.source.title || turnDate({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
+        markdown_description: handleConditionContent
       }
 
-      const response = await fetch('https://api.capacities.io/save-to-daily-note', {
+      const response = await fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
         method: 'POST',
         headers: {
           Authorization: 'Bearer ' + this.settings.token,
@@ -108,6 +111,8 @@ export default class extends MoonPlugin {
       const jsonResponse = await response.json()
       return jsonResponse[0].success === true
     },
-    buttonIconUrl: 'https://capacities.io/capacities-logo.png'
+    buttonIconUrl: 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
   }
+
+  // TODO: mention for tags
 }

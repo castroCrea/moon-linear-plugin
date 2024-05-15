@@ -1,13 +1,13 @@
-# [Capacities](https://capacities.io/) Plugin for [Moon Jot](moonjot.com)
+# [Clickup](https://clickup.io/) Plugin for [Moon Jot](moonjot.com)
 
-<span class="badge-npmversion"><a href="https://npmjs.org/package/@moonjot/moon-capacities-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/v/@moonjot/moon-capacities-plugin.svg" alt="NPM version" /></a></span>
-<span class="badge-npmdownloads"><a href="https://npmjs.org/package/@moonjot/moon-capacities-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/@moonjot/moon-capacities-plugin.svg" alt="NPM downloads" /></a></span>
+<span class="badge-npmversion"><a href="https://npmjs.org/package/@moonjot/moon-clickup-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/v/@moonjot/moon-clickup-plugin.svg" alt="NPM version" /></a></span>
+<span class="badge-npmdownloads"><a href="https://npmjs.org/package/@moonjot/moon-clickup-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/@moonjot/moon-clickup-plugin.svg" alt="NPM downloads" /></a></span>
 
 
 
-Send Note from your OS to [Capacities](https://capacities.io/) with your current context. Make it faster and even more capacities to take note into Capacities
+Send Note from your OS to [Clickup](https://clickup.io/) with your current context. Make it faster and even more clickup to take note into Clickup
 
-Get Capacities token
+Get Clickup token
 
 Go to settings
 

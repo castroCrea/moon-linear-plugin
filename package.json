@@ -1,7 +1,7 @@
 {
-  "name": "@moonjot/moon-capacities-plugin",
+  "name": "@moonjot/moon-clickup-plugin",
   "version": "0.0.0",
-  "description": "Plugin Capacities for Moon Jot",
+  "description": "Plugin Clickup for Moon Jot",
   "main": "./dist/index.js",
   "dependencies": {
     "@moonjot/moon": "^0.1.72",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/castroCrea/moon-capacities-plugin"
+    "url": "https://github.com/castroCrea/moon-clickup-plugin"
   },
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -20,7 +20,7 @@
     "watch": "tsc --watch"
   },
   "keywords": [
-    "Capacities",
+    "Clickup",
     "plugin",
     "moon",
     "integration",
