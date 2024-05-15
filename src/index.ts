@@ -1,83 +1,113 @@
 import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription } from '@moonjot/moon'
+import { handleConditions, handleReplacingProperties, turnDate } from '@moonjot/moon-utils'
+import { DEFAULT_TEMPLATE } from './template'
 
-interface SamplePluginSettingsDescription extends PluginSettingsDescription {
+interface CapacitiesPluginSettingsDescription extends PluginSettingsDescription {
   token: {
     type: 'string'
     required: boolean
     label: string
     description: string
   }
-  databaseId: {
+  spaceId: {
     type: 'string'
     required: boolean
     label: string
     description: string
   }
+  template: {
+    type: 'text'
+    required: boolean
+    label: string
+    description: string
+    default: string
+  }
 }
 
-interface SamplePluginSettings extends MoonPluginSettings {
+interface CapacitiesPluginSettings extends MoonPluginSettings {
   token: string
-  databaseId: string
+  template: string
+  spaceId: string
 }
 
 export default class extends MoonPlugin {
-  name: string = 'Sample'
-  logo: string = 'https://previews.123rf.com/images/aquir/aquir1311/aquir131100316/23569861-sample-grunge-red-round-stamp.jpg'
+  name: string = 'Capacities'
+  logo: string = 'https://capacities.io/capacities-logo.png'
 
-  settingsDescription: SamplePluginSettingsDescription = {
+  settingsDescription: CapacitiesPluginSettingsDescription = {
     token: {
       type: 'string',
       required: true,
       label: 'Token',
-      description: 'The Sample plugin token.'
+      description: 'Capacities API token.'
     },
-    databaseId: {
+    spaceId: {
       type: 'string',
       required: true,
-      label: 'Database ID',
-      description: 'The Sample database id plugin token.'
+      label: 'Space Id',
+      description: 'Capacities Space Id.'
+    },
+    template: {
+      type: 'text',
+      required: true,
+      label: 'Template of capture',
+      description: 'Format your note result inside Capacities. [Documentation](https://github.com/castroCrea/moon-capacities-plugin/blob/main/README.md)',
+      default: DEFAULT_TEMPLATE
     }
   }
 
-  settings: SamplePluginSettings = {
+  settings: CapacitiesPluginSettings = {
     token: '',
-    databaseId: ''
+    spaceId: '',
+    template: DEFAULT_TEMPLATE
   }
 
-  constructor (props?: MoonPluginConstructorProps<SamplePluginSettings>) {
+  log: ((log: string) => void) | undefined
+
+  constructor (props?: MoonPluginConstructorProps<CapacitiesPluginSettings>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     super(props)
     if (!props) return
-    if (props.settings) this.settings = props.settings
-
-    this.settingsButtons = [
-      {
-        type: 'button',
-        callback: () => {
-          window.open('https://moonjot.com', '_blank')
-        },
-        label: 'Button that trigger a callback',
-        description: 'Button that trigger a callback.'
-
-      }
-    ]
+    if (props.settings) this.settings = { ...this.settings, ...props.settings }
+    this.log = props.helpers.moonLog
   }
 
   integration = {
-    callback: async ({ context, html }: {
+    callback: async ({ context, markdown }: {
       html: string
       markdown: string
       context: Context
     }
     ) => {
-      console.log('MoonPlugin integration')
-      return false
-    },
-    buttonIconUrl: 'https://previews.123rf.com/images/aquir/aquir1311/aquir131100316/23569861-sample-grunge-red-round-stamp.jpg'
-  }
+      if (!this.settings.spaceId) return false
+      const handleDateContent = turnDate({ content: this.settings.template })
 
-  context = async ({ context }: { context: Context }) => {
-    console.log('MoonPlugin integration')
-    return context
+      const searchObj = {
+        content: markdown,
+        ...context
+      }
+
+      const handlePropertiesContent = handleReplacingProperties({ content: handleDateContent, searchObj }) ?? ''
+
+      const handleConditionContent = handleConditions({ content: handlePropertiesContent, searchObj })?.trim() ?? ''
+
+      const payload = {
+        mdText: handleConditionContent,
+        spaceId: this.settings.spaceId,
+        origin: 'commandPalette'
+      }
+
+      const response = await fetch('https://api.capacities.io/save-to-daily-note', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + this.settings.token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      const jsonResponse = await response.json()
+      return jsonResponse[0].success === true
+    },
+    buttonIconUrl: 'https://capacities.io/capacities-logo.png'
   }
 }

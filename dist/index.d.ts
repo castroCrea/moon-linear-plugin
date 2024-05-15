@@ -1,38 +1,44 @@
 import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription } from '@moonjot/moon';
-interface SamplePluginSettingsDescription extends PluginSettingsDescription {
+interface CapacitiesPluginSettingsDescription extends PluginSettingsDescription {
     token: {
         type: 'string';
         required: boolean;
         label: string;
         description: string;
     };
-    databaseId: {
+    spaceId: {
         type: 'string';
         required: boolean;
         label: string;
         description: string;
     };
+    template: {
+        type: 'text';
+        required: boolean;
+        label: string;
+        description: string;
+        default: string;
+    };
 }
-interface SamplePluginSettings extends MoonPluginSettings {
+interface CapacitiesPluginSettings extends MoonPluginSettings {
     token: string;
-    databaseId: string;
+    template: string;
+    spaceId: string;
 }
 export default class extends MoonPlugin {
     name: string;
     logo: string;
-    settingsDescription: SamplePluginSettingsDescription;
-    settings: SamplePluginSettings;
-    constructor(props?: MoonPluginConstructorProps<SamplePluginSettings>);
+    settingsDescription: CapacitiesPluginSettingsDescription;
+    settings: CapacitiesPluginSettings;
+    log: ((log: string) => void) | undefined;
+    constructor(props?: MoonPluginConstructorProps<CapacitiesPluginSettings>);
     integration: {
-        callback: ({ context, html }: {
+        callback: ({ context, markdown }: {
             html: string;
             markdown: string;
             context: Context;
         }) => Promise<boolean>;
         buttonIconUrl: string;
     };
-    context: ({ context }: {
-        context: Context;
-    }) => Promise<Context>;
 }
 export {};
