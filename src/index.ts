@@ -103,13 +103,14 @@ export default class extends MoonPlugin {
       const response = await fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
         method: 'POST',
         headers: {
-          Authorization: 'Bearer ' + this.settings.token,
+          Authorization: this.settings.token,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
       })
+
       const jsonResponse = await response.json()
-      return jsonResponse[0].success === true
+      return jsonResponse.id ? { url: jsonResponse.url } : false
     },
     buttonIconUrl: 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
   }

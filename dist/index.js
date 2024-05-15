@@ -52,22 +52,25 @@ class default_1 extends moon_1.MoonPlugin {
                 const handleDateContent = (0, moon_utils_1.turnDate)({ content: this.settings.template });
                 const searchObj = Object.assign({ content: markdown }, context);
                 const handlePropertiesContent = (_a = (0, moon_utils_1.handleReplacingProperties)({ content: handleDateContent, searchObj })) !== null && _a !== void 0 ? _a : '';
-                const handleConditionContent = (_c = (_b = (0, moon_utils_1.handleConditions)({ content: handlePropertiesContent, searchObj })) === null || _b === void 0 ? void 0 : _b.trim()) !== null && _c !== void 0 ? _c : '';
+                let handleConditionContent = (_c = (_b = (0, moon_utils_1.handleConditions)({ content: handlePropertiesContent, searchObj })) === null || _b === void 0 ? void 0 : _b.trim()) !== null && _c !== void 0 ? _c : '';
+                const title = (0, moon_utils_1.extractTitleFromMarkdown)(handleConditionContent);
+                if (title)
+                    handleConditionContent = handleConditionContent.split('\n').slice(1).join('\n');
                 const payload = {
-                    mdText: handleConditionContent,
-                    listId: this.settings.listId,
-                    origin: 'commandPalette'
+                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+                    name: title || context.source.title || (0, moon_utils_1.turnDate)({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
+                    markdown_description: handleConditionContent
                 };
-                const response = yield fetch('https://api.clickup.io/save-to-daily-note', {
+                const response = yield fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
                     method: 'POST',
                     headers: {
-                        Authorization: 'Bearer ' + this.settings.token,
+                        Authorization: this.settings.token,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
                 const jsonResponse = yield response.json();
-                return jsonResponse[0].success === true;
+                return jsonResponse.id ? { url: jsonResponse.url } : false;
             }),
             buttonIconUrl: 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
         };

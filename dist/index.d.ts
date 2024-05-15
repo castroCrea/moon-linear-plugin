@@ -23,7 +23,6 @@ interface ClickupPluginSettingsDescription extends PluginSettingsDescription {
 interface ClickupPluginSettings extends MoonPluginSettings {
     token: string;
     template: string;
-    listId: string;
 }
 export default class extends MoonPlugin {
     name: string;
@@ -37,7 +36,9 @@ export default class extends MoonPlugin {
             html: string;
             markdown: string;
             context: Context;
-        }) => Promise<boolean>;
+        }) => Promise<false | {
+            url: any;
+        }>;
         buttonIconUrl: string;
     };
 }

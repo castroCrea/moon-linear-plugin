@@ -1,10 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_TEMPLATE = void 0;
-exports.DEFAULT_TEMPLATE = `
-{{content}}
-
+exports.DEFAULT_TEMPLATE = `{{content}}
 {{IF source.url}}
+
 # {{IF source.title}}{{source.title}}{{END_IF source.title}}
 {{IF source.url}}{{source.url}}{{END_IF source.url}}
 {{IF source.image}}![]({{source.image}}){{END_IF source.image}}
@@ -15,8 +14,8 @@ exports.DEFAULT_TEMPLATE = `
 - [{{source.timestamp.0.timestamp}}]({{source.timestamp.0.url}})
 {{END_IF source.timestamp}}
 {{END_IF source.url}}
-
 {{IF people.0.name}}
+
 # {{IF people.0.name}}{{people.0.name}}{{END_IF people.0.name}}
 {{IF people.0.job}}{{people.0.job}}{{END_IF people.0.job}}
 {{IF people.0.email}}[{{people.0.email}}](mailto:{{people.0.email}}){{END_IF people.0.email}}
