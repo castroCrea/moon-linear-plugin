@@ -46,7 +46,7 @@ class default_1 extends moon_1.MoonPlugin {
         };
         this.integration = {
             callback: ({ context, markdown }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c;
+                var _a, _b, _c, _d, _e;
                 if (!this.settings.listId)
                     return false;
                 const handleDateContent = (0, moon_utils_1.turnDate)({ content: this.settings.template });
@@ -59,7 +59,8 @@ class default_1 extends moon_1.MoonPlugin {
                 const payload = {
                     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                     name: title || context.source.title || (0, moon_utils_1.turnDate)({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
-                    markdown_description: handleConditionContent
+                    markdown_description: handleConditionContent,
+                    tags: (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags
                 };
                 const response = yield fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
                     method: 'POST',
@@ -73,6 +74,58 @@ class default_1 extends moon_1.MoonPlugin {
                 return jsonResponse.id ? { url: jsonResponse.url } : false;
             }),
             buttonIconUrl: 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
+        };
+        this.mention = () => {
+            if (!this.settings.token || !this.settings.listId)
+                return [];
+            return [
+                {
+                    name: 'clickup_keywords',
+                    char: '#',
+                    htmlClass: 'mention_collections',
+                    allowSpaces: true,
+                    getListItem: () => __awaiter(this, void 0, void 0, function* () {
+                        var _a;
+                        const list = yield fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}`, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: this.settings.token,
+                                'Content-Type': 'application/jso#n'
+                            }
+                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
+                        // this.log?.(JSON.stringify({ list }))
+                        const spaceId = (_a = list === null || list === void 0 ? void 0 : list.space) === null || _a === void 0 ? void 0 : _a.id;
+                        if (!spaceId)
+                            return [];
+                        const tagsResponse = yield fetch(`https://api.clickup.com/api/v2/space/${spaceId}/tag`, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: this.settings.token,
+                                'Content-Type': 'application/json'
+                            }
+                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
+                        // this.log?.(JSON.stringify({ tagsResponse }))
+                        const tags = tagsResponse.tags;
+                        if (!tags)
+                            return [];
+                        return tags.map((tag) => ({ title: tag.name }));
+                    }),
+                    onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
+                        var _a, _b, _c, _d;
+                        deleteMentionPlaceholder();
+                        const tags = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.clickup) === null || _b === void 0 ? void 0 : _b.tags) !== null && _c !== void 0 ? _c : [];
+                        const tag = item.title;
+                        const index = tags.indexOf(tag);
+                        if (index === -1) {
+                            tags.push(tag);
+                        }
+                        else {
+                            tags.splice(index, 1);
+                        }
+                        setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_d = context.pluginPlayground) !== null && _d !== void 0 ? _d : {})), { clickup: { tags } }) }));
+                    }
+                }
+            ];
         };
         if (!props)
             return;

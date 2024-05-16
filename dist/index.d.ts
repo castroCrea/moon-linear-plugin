@@ -1,4 +1,4 @@
-import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription } from '@moonjot/moon';
+import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription, type PluginMentionItem } from '@moonjot/moon';
 interface ClickupPluginSettingsDescription extends PluginSettingsDescription {
     token: {
         type: 'string';
@@ -41,5 +41,6 @@ export default class extends MoonPlugin {
         }>;
         buttonIconUrl: string;
     };
+    mention: () => PluginMentionItem[];
 }
 export {};

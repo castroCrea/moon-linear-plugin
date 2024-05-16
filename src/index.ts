@@ -1,4 +1,4 @@
-import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription } from '@moonjot/moon'
+import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription, type PluginMentionItem } from '@moonjot/moon'
 import { extractTitleFromMarkdown, handleConditions, handleReplacingProperties, turnDate } from '@moonjot/moon-utils'
 import { DEFAULT_TEMPLATE } from './template'
 
@@ -97,7 +97,8 @@ export default class extends MoonPlugin {
       const payload = {
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         name: title || context.source.title || turnDate({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
-        markdown_description: handleConditionContent
+        markdown_description: handleConditionContent,
+        tags: context.pluginPlayground?.clickup?.tags
       }
 
       const response = await fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
@@ -115,5 +116,61 @@ export default class extends MoonPlugin {
     buttonIconUrl: 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
   }
 
-  // TODO: mention for tags
+  mention = (): PluginMentionItem[] => {
+    if (!this.settings.token || !this.settings.listId) return []
+    return [
+      {
+        name: 'clickup_keywords',
+        char: '#',
+        htmlClass: 'mention_collections',
+        allowSpaces: true,
+        getListItem: async () => {
+          const list = await fetch(
+            `https://api.clickup.com/api/v2/list/${this.settings.listId}`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: this.settings.token,
+                'Content-Type': 'application/jso#n'
+              }
+            }
+          ).then(async r => await r.json())
+
+          // this.log?.(JSON.stringify({ list }))
+          const spaceId = list?.space?.id
+          if (!spaceId) return []
+
+          const tagsResponse = await fetch(
+          `https://api.clickup.com/api/v2/space/${spaceId}/tag`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: this.settings.token,
+              'Content-Type': 'application/json'
+            }
+          }
+          ).then(async r => await r.json())
+          // this.log?.(JSON.stringify({ tagsResponse }))
+
+          const tags = tagsResponse.tags
+          if (!tags) return []
+          return tags.map((tag: { name: string, tag_fg: string, tag_bg: string }) => ({ title: tag.name }))
+        },
+        onSelectItem: (
+          { item, setContext, context, deleteMentionPlaceholder }) => {
+          deleteMentionPlaceholder()
+          const tags = context.pluginPlayground?.clickup?.tags ?? []
+          const tag = item.title
+          const index = tags.indexOf(tag)
+
+          if (index === -1) {
+            tags.push(tag)
+          } else {
+            tags.splice(index, 1)
+          }
+          setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { tags } } })
+        }
+      }
+    ]
+  }
 }
