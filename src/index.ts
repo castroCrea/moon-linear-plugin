@@ -98,7 +98,8 @@ export default class extends MoonPlugin {
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         name: title || context.source.title || turnDate({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
         markdown_description: handleConditionContent,
-        tags: context.pluginPlayground?.clickup?.tags
+        tags: context.pluginPlayground?.clickup?.tags,
+        priority: context.pluginPlayground?.clickup?.priority
       }
 
       const response = await fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
@@ -154,21 +155,39 @@ export default class extends MoonPlugin {
 
           const tags = tagsResponse.tags
           if (!tags) return []
-          return tags.map((tag: { name: string, tag_fg: string, tag_bg: string }) => ({ title: tag.name }))
+          const mentionTags = tags.map((tag: { name: string, tag_fg: string, tag_bg: string }) => ({
+            title: tag.name,
+            clickup_type: 'tag',
+            background: tag.tag_fg
+          }))
+
+          const mentionPriority = [
+            { title: 'none', clickup_type: 'priority', clickup_value: null },
+            { title: 'Low', clickup_type: 'priority', clickup_value: 4, color: 'rgb(135, 144, 158)' },
+            { title: 'Normal', clickup_type: 'priority', clickup_value: 3, color: 'rgb(68, 102, 255)' },
+            { title: 'High', clickup_type: 'priority', clickup_value: 2, color: 'rgb(207, 148, 10)' },
+            { title: 'Urgent', clickup_type: 'priority', clickup_value: 1, color: '#b13a41' }
+          ]
+
+          return [...mentionTags, ...mentionPriority]
         },
         onSelectItem: (
           { item, setContext, context, deleteMentionPlaceholder }) => {
           deleteMentionPlaceholder()
-          const tags = context.pluginPlayground?.clickup?.tags ?? []
-          const tag = item.title
-          const index = tags.indexOf(tag)
+          if (item.clickup_type === 'tag') {
+            const tags = context.pluginPlayground?.clickup?.tags ?? []
+            const tag = item.title
+            const index = tags.indexOf(tag)
 
-          if (index === -1) {
-            tags.push(tag)
-          } else {
-            tags.splice(index, 1)
+            if (index === -1) {
+              tags.push(tag)
+            } else {
+              tags.splice(index, 1)
+            }
+            setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { ...(context?.pluginPlayground?.clickup ?? {}), tags } } })
+          } else if (item.clickup_type === 'priority') {
+            setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { ...(context?.pluginPlayground?.clickup ?? {}), priority: item.clickup_value } } })
           }
-          setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { tags } } })
         }
       }
     ]

@@ -46,7 +46,7 @@ class default_1 extends moon_1.MoonPlugin {
         };
         this.integration = {
             callback: ({ context, markdown }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d, _e;
+                var _a, _b, _c, _d, _e, _f, _g;
                 if (!this.settings.listId)
                     return false;
                 const handleDateContent = (0, moon_utils_1.turnDate)({ content: this.settings.template });
@@ -60,7 +60,8 @@ class default_1 extends moon_1.MoonPlugin {
                     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                     name: title || context.source.title || (0, moon_utils_1.turnDate)({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
                     markdown_description: handleConditionContent,
-                    tags: (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags
+                    tags: (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags,
+                    priority: (_g = (_f = context.pluginPlayground) === null || _f === void 0 ? void 0 : _f.clickup) === null || _g === void 0 ? void 0 : _g.priority
                 };
                 const response = yield fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
                     method: 'POST',
@@ -108,21 +109,38 @@ class default_1 extends moon_1.MoonPlugin {
                         const tags = tagsResponse.tags;
                         if (!tags)
                             return [];
-                        return tags.map((tag) => ({ title: tag.name }));
+                        const mentionTags = tags.map((tag) => ({
+                            title: tag.name,
+                            clickup_type: 'tag',
+                            background: tag.tag_fg
+                        }));
+                        const mentionPriority = [
+                            { title: 'none', clickup_type: 'priority', clickup_value: null },
+                            { title: 'Low', clickup_type: 'priority', clickup_value: 4, color: 'rgb(135, 144, 158)' },
+                            { title: 'Normal', clickup_type: 'priority', clickup_value: 3, color: 'rgb(68, 102, 255)' },
+                            { title: 'High', clickup_type: 'priority', clickup_value: 2, color: 'rgb(207, 148, 10)' },
+                            { title: 'Urgent', clickup_type: 'priority', clickup_value: 1, color: '#b13a41' }
+                        ];
+                        return [...mentionTags, ...mentionPriority];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
-                        var _a, _b, _c, _d;
+                        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
                         deleteMentionPlaceholder();
-                        const tags = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.clickup) === null || _b === void 0 ? void 0 : _b.tags) !== null && _c !== void 0 ? _c : [];
-                        const tag = item.title;
-                        const index = tags.indexOf(tag);
-                        if (index === -1) {
-                            tags.push(tag);
+                        if (item.clickup_type === 'tag') {
+                            const tags = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.clickup) === null || _b === void 0 ? void 0 : _b.tags) !== null && _c !== void 0 ? _c : [];
+                            const tag = item.title;
+                            const index = tags.indexOf(tag);
+                            if (index === -1) {
+                                tags.push(tag);
+                            }
+                            else {
+                                tags.splice(index, 1);
+                            }
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_d = context.pluginPlayground) !== null && _d !== void 0 ? _d : {})), { clickup: Object.assign(Object.assign({}, ((_f = (_e = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _e === void 0 ? void 0 : _e.clickup) !== null && _f !== void 0 ? _f : {})), { tags }) }) }));
                         }
-                        else {
-                            tags.splice(index, 1);
+                        else if (item.clickup_type === 'priority') {
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_g = context.pluginPlayground) !== null && _g !== void 0 ? _g : {})), { clickup: Object.assign(Object.assign({}, ((_j = (_h = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.clickup) !== null && _j !== void 0 ? _j : {})), { priority: item.clickup_value }) }) }));
                         }
-                        setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_d = context.pluginPlayground) !== null && _d !== void 0 ? _d : {})), { clickup: { tags } }) }));
                     }
                 }
             ];
