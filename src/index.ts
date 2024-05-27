@@ -43,8 +43,8 @@ export default class extends MoonPlugin {
     listId: {
       type: 'string',
       required: true,
-      label: 'Space Id',
-      description: 'Clickup Space Id.'
+      label: 'Default List Id',
+      description: 'Clickup Default List Id for task, you can always change it by typing >> on the text editor.'
     },
     template: {
       type: 'text',
@@ -102,7 +102,7 @@ export default class extends MoonPlugin {
         priority: context.pluginPlayground?.clickup?.priority
       }
 
-      const response = await fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
+      const response = await fetch(`https://api.clickup.com/api/v2/list/${context.pluginPlayground.clickup.listId ?? this.settings.listId}/task`, {
         method: 'POST',
         headers: {
           Authorization: this.settings.token,
@@ -188,6 +188,79 @@ export default class extends MoonPlugin {
           } else if (item.clickup_type === 'priority') {
             setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { ...(context?.pluginPlayground?.clickup ?? {}), priority: item.clickup_value } } })
           }
+        }
+      },
+      {
+        name: 'clickup_destination',
+        char: '>>',
+        htmlClass: 'mention_collections',
+        allowSpaces: true,
+        getListItem: async () => {
+          const list = await fetch(
+            `https://api.clickup.com/api/v2/list/${this.settings.listId}`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: this.settings.token,
+                'Content-Type': 'application/jso#n'
+              }
+            }
+          ).then(async r => await r.json())
+
+          // this.log?.(JSON.stringify({ list }))
+          const folderId = list?.folder?.id
+          const spaceId = list?.space?.id
+
+          const foldersResponse = await fetch(
+            `https://api.clickup.com/api/v2/space/${spaceId}/folder?archived=false`,
+            {
+              method: 'GET',
+              headers: {
+                Authorization: this.settings.token,
+                'Content-Type': 'application/json'
+              }
+            }
+          ).then(async r => await r.json())
+
+          const folderLists = (foldersResponse.folders as Array<{ lists: Array<{ id: string }> }>).flatMap(l => l.lists)
+
+          const listsResponse = await fetch(
+          `https://api.clickup.com/api/v2/folder/${folderId}/list?archived=false`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: this.settings.token,
+              'Content-Type': 'application/json'
+            }
+          }
+          ).then(async r => await r.json())
+
+          const spaceListsResponse = await fetch(
+          `https://api.clickup.com/api/v2/space/${spaceId}/list`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: this.settings.token,
+              'Content-Type': 'application/json'
+            }
+          }
+          ).then(async r => await r.json())
+          // this.log?.(JSON.stringify({ tagsResponse }))
+
+          const lists: Array<{ name: string, archived: boolean, id: string }> = [...folderLists, ...listsResponse.lists, ...spaceListsResponse.lists]
+          if (!lists) return []
+          const mentionLits = lists.filter(l => !l.archived).map((list) => ({
+            title: list.name,
+            clickup_type: 'list',
+            id: list.id
+          }))
+
+          return mentionLits
+        },
+        onSelectItem: (
+          { item, setContext, context, deleteMentionPlaceholder }) => {
+          deleteMentionPlaceholder()
+          setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { ...(context?.pluginPlayground?.clickup ?? {}), listId: item.id } } })
         }
       }
     ]

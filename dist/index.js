@@ -28,8 +28,8 @@ class default_1 extends moon_1.MoonPlugin {
             listId: {
                 type: 'string',
                 required: true,
-                label: 'Space Id',
-                description: 'Clickup Space Id.'
+                label: 'Default List Id',
+                description: 'Clickup Default List Id for task, you can always change it by typing >> on the text editor.'
             },
             template: {
                 type: 'text',
@@ -46,7 +46,7 @@ class default_1 extends moon_1.MoonPlugin {
         };
         this.integration = {
             callback: ({ context, markdown }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d, _e, _f, _g;
+                var _a, _b, _c, _d, _e, _f, _g, _h;
                 if (!this.settings.listId)
                     return false;
                 const handleDateContent = (0, moon_utils_1.turnDate)({ content: this.settings.template });
@@ -63,7 +63,7 @@ class default_1 extends moon_1.MoonPlugin {
                     tags: (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags,
                     priority: (_g = (_f = context.pluginPlayground) === null || _f === void 0 ? void 0 : _f.clickup) === null || _g === void 0 ? void 0 : _g.priority
                 };
-                const response = yield fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}/task`, {
+                const response = yield fetch(`https://api.clickup.com/api/v2/list/${(_h = context.pluginPlayground.clickup.listId) !== null && _h !== void 0 ? _h : this.settings.listId}/task`, {
                     method: 'POST',
                     headers: {
                         Authorization: this.settings.token,
@@ -141,6 +141,62 @@ class default_1 extends moon_1.MoonPlugin {
                         else if (item.clickup_type === 'priority') {
                             setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_g = context.pluginPlayground) !== null && _g !== void 0 ? _g : {})), { clickup: Object.assign(Object.assign({}, ((_j = (_h = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.clickup) !== null && _j !== void 0 ? _j : {})), { priority: item.clickup_value }) }) }));
                         }
+                    }
+                },
+                {
+                    name: 'clickup_destination',
+                    char: '>>',
+                    htmlClass: 'mention_collections',
+                    allowSpaces: true,
+                    getListItem: () => __awaiter(this, void 0, void 0, function* () {
+                        var _b, _c;
+                        const list = yield fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}`, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: this.settings.token,
+                                'Content-Type': 'application/jso#n'
+                            }
+                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
+                        // this.log?.(JSON.stringify({ list }))
+                        const folderId = (_b = list === null || list === void 0 ? void 0 : list.folder) === null || _b === void 0 ? void 0 : _b.id;
+                        const spaceId = (_c = list === null || list === void 0 ? void 0 : list.space) === null || _c === void 0 ? void 0 : _c.id;
+                        const foldersResponse = yield fetch(`https://api.clickup.com/api/v2/space/${spaceId}/folder?archived=false`, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: this.settings.token,
+                                'Content-Type': 'application/json'
+                            }
+                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
+                        const folderLists = foldersResponse.folders.flatMap(l => l.lists);
+                        const listsResponse = yield fetch(`https://api.clickup.com/api/v2/folder/${folderId}/list?archived=false`, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: this.settings.token,
+                                'Content-Type': 'application/json'
+                            }
+                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
+                        const spaceListsResponse = yield fetch(`https://api.clickup.com/api/v2/space/${spaceId}/list`, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: this.settings.token,
+                                'Content-Type': 'application/json'
+                            }
+                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
+                        // this.log?.(JSON.stringify({ tagsResponse }))
+                        const lists = [...folderLists, ...listsResponse.lists, ...spaceListsResponse.lists];
+                        if (!lists)
+                            return [];
+                        const mentionLits = lists.filter(l => !l.archived).map((list) => ({
+                            title: list.name,
+                            clickup_type: 'list',
+                            id: list.id
+                        }));
+                        return mentionLits;
+                    }),
+                    onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
+                        var _a, _b, _c;
+                        deleteMentionPlaceholder();
+                        setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { clickup: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.clickup) !== null && _c !== void 0 ? _c : {})), { listId: item.id }) }) }));
                     }
                 }
             ];
