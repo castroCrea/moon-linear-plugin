@@ -98,11 +98,11 @@ export default class extends MoonPlugin {
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         name: title || context.source.title || turnDate({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
         markdown_description: handleConditionContent,
-        tags: context.pluginPlayground?.clickup?.tags,
-        priority: context.pluginPlayground?.clickup?.priority
+        tags: context.pluginPlayground?.clickup?.tags.value || [],
+        priority: context.pluginPlayground?.clickup?.priority.value
       }
 
-      const response = await fetch(`https://api.clickup.com/api/v2/list/${context.pluginPlayground.clickup.listId ?? this.settings.listId}/task`, {
+      const response = await fetch(`https://api.clickup.com/api/v2/list/${context.pluginPlayground?.clickup.listId.value ?? this.settings.listId}/task`, {
         method: 'POST',
         headers: {
           Authorization: this.settings.token,
@@ -175,18 +175,45 @@ export default class extends MoonPlugin {
           { item, setContext, context, deleteMentionPlaceholder }) => {
           deleteMentionPlaceholder()
           if (item.clickup_type === 'tag') {
-            const tags = context.pluginPlayground?.clickup?.tags ?? []
+            const tags = context.pluginPlayground?.clickup?.tags.value ?? []
+            const tagsRender = context.pluginPlayground?.clickup?.tags.render ?? []
             const tag = item.title
             const index = tags.indexOf(tag)
 
             if (index === -1) {
               tags.push(tag)
+              tagsRender.push({ background: item.background, color: item.color, title: item.title })
             } else {
               tags.splice(index, 1)
+              tagsRender.splice(index, 1)
             }
-            setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { ...(context?.pluginPlayground?.clickup ?? {}), tags } } })
+            setContext({
+              ...context,
+              pluginPlayground: {
+                ...(context.pluginPlayground ?? {}),
+                clickup: {
+                  ...(context?.pluginPlayground?.clickup ?? {}),
+                  tags: {
+                    value: tags,
+                    render: tagsRender
+                  }
+                }
+              }
+            })
           } else if (item.clickup_type === 'priority') {
-            setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { ...(context?.pluginPlayground?.clickup ?? {}), priority: item.clickup_value } } })
+            setContext({
+              ...context,
+              pluginPlayground: {
+                ...(context.pluginPlayground ?? {}),
+                clickup: {
+                  ...(context?.pluginPlayground?.clickup ?? {}),
+                  priority: {
+                    value: [item.clickup_value as string],
+                    render: [{ title: item.title, color: item.color, background: item.background }]
+                  }
+                }
+              }
+            })
           }
         }
       },
@@ -260,7 +287,19 @@ export default class extends MoonPlugin {
         onSelectItem: (
           { item, setContext, context, deleteMentionPlaceholder }) => {
           deleteMentionPlaceholder()
-          setContext({ ...context, pluginPlayground: { ...(context.pluginPlayground ?? {}), clickup: { ...(context?.pluginPlayground?.clickup ?? {}), listId: item.id } } })
+          setContext({
+            ...context,
+            pluginPlayground: {
+              ...(context.pluginPlayground ?? {}),
+              clickup: {
+                ...(context?.pluginPlayground?.clickup ?? {}),
+                listId: {
+                  value: [item.id as string],
+                  render: [{ title: item.title, color: item.color, background: item.background }]
+                }
+              }
+            }
+          })
         }
       }
     ]

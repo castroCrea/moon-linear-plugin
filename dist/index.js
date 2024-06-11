@@ -46,7 +46,7 @@ class default_1 extends moon_1.MoonPlugin {
         };
         this.integration = {
             callback: ({ context, markdown }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d, _e, _f, _g, _h;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j;
                 if (!this.settings.listId)
                     return false;
                 const handleDateContent = (0, moon_utils_1.turnDate)({ content: this.settings.template });
@@ -60,10 +60,10 @@ class default_1 extends moon_1.MoonPlugin {
                     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                     name: title || context.source.title || (0, moon_utils_1.turnDate)({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
                     markdown_description: handleConditionContent,
-                    tags: (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags,
-                    priority: (_g = (_f = context.pluginPlayground) === null || _f === void 0 ? void 0 : _f.clickup) === null || _g === void 0 ? void 0 : _g.priority
+                    tags: ((_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags.value) || [],
+                    priority: (_g = (_f = context.pluginPlayground) === null || _f === void 0 ? void 0 : _f.clickup) === null || _g === void 0 ? void 0 : _g.priority.value
                 };
-                const response = yield fetch(`https://api.clickup.com/api/v2/list/${(_h = context.pluginPlayground.clickup.listId) !== null && _h !== void 0 ? _h : this.settings.listId}/task`, {
+                const response = yield fetch(`https://api.clickup.com/api/v2/list/${(_j = (_h = context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.clickup.listId.value) !== null && _j !== void 0 ? _j : this.settings.listId}/task`, {
                     method: 'POST',
                     headers: {
                         Authorization: this.settings.token,
@@ -124,22 +124,31 @@ class default_1 extends moon_1.MoonPlugin {
                         return [...mentionTags, ...mentionPriority];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
-                        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+                        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
                         deleteMentionPlaceholder();
                         if (item.clickup_type === 'tag') {
-                            const tags = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.clickup) === null || _b === void 0 ? void 0 : _b.tags) !== null && _c !== void 0 ? _c : [];
+                            const tags = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.clickup) === null || _b === void 0 ? void 0 : _b.tags.value) !== null && _c !== void 0 ? _c : [];
+                            const tagsRender = (_f = (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags.render) !== null && _f !== void 0 ? _f : [];
                             const tag = item.title;
                             const index = tags.indexOf(tag);
                             if (index === -1) {
                                 tags.push(tag);
+                                tagsRender.push({ background: item.background, color: item.color, title: item.title });
                             }
                             else {
                                 tags.splice(index, 1);
+                                tagsRender.splice(index, 1);
                             }
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_d = context.pluginPlayground) !== null && _d !== void 0 ? _d : {})), { clickup: Object.assign(Object.assign({}, ((_f = (_e = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _e === void 0 ? void 0 : _e.clickup) !== null && _f !== void 0 ? _f : {})), { tags }) }) }));
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_g = context.pluginPlayground) !== null && _g !== void 0 ? _g : {})), { clickup: Object.assign(Object.assign({}, ((_j = (_h = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.clickup) !== null && _j !== void 0 ? _j : {})), { tags: {
+                                            value: tags,
+                                            render: tagsRender
+                                        } }) }) }));
                         }
                         else if (item.clickup_type === 'priority') {
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_g = context.pluginPlayground) !== null && _g !== void 0 ? _g : {})), { clickup: Object.assign(Object.assign({}, ((_j = (_h = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.clickup) !== null && _j !== void 0 ? _j : {})), { priority: item.clickup_value }) }) }));
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_k = context.pluginPlayground) !== null && _k !== void 0 ? _k : {})), { clickup: Object.assign(Object.assign({}, ((_m = (_l = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _l === void 0 ? void 0 : _l.clickup) !== null && _m !== void 0 ? _m : {})), { priority: {
+                                            value: [item.clickup_value],
+                                            render: [{ title: item.title, color: item.color, background: item.background }]
+                                        } }) }) }));
                         }
                     }
                 },
@@ -196,7 +205,10 @@ class default_1 extends moon_1.MoonPlugin {
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
                         var _a, _b, _c;
                         deleteMentionPlaceholder();
-                        setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { clickup: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.clickup) !== null && _c !== void 0 ? _c : {})), { listId: item.id }) }) }));
+                        setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { clickup: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.clickup) !== null && _c !== void 0 ? _c : {})), { listId: {
+                                        value: [item.id],
+                                        render: [{ title: item.title, color: item.color, background: item.background }]
+                                    } }) }) }));
                     }
                 }
             ];
