@@ -1,10 +1,10 @@
 {
   "name": "@moonjot/moon-clickup-plugin",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Plugin Clickup for Moon Jot",
   "main": "./dist/index.js",
   "dependencies": {
-    "@moonjot/moon": "^0.1.78",
+    "@moonjot/moon": "^0.1.94",
     "@moonjot/moon-utils": "^0.0.9"
   },
   "repository": {
