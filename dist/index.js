@@ -12,203 +12,155 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const moon_1 = require("@moonjot/moon");
 const moon_utils_1 = require("@moonjot/moon-utils");
 const template_1 = require("./template");
+const linear_1 = require("./linear");
+const ENDPOINT = {
+    endpoint: 'auth/linear',
+    callback: ({ url, saveSettings, doNotification }) => {
+        var _a;
+        const queries = (_a = url.split('?').pop()) === null || _a === void 0 ? void 0 : _a.split('&').reduce((acc, query) => {
+            const queryString = query.split('=');
+            const key = queryString[0];
+            const value = queryString[1];
+            if (!key || !value)
+                return acc;
+            return Object.assign(Object.assign({}, acc), { [key]: value });
+        }, {});
+        if (!(queries === null || queries === void 0 ? void 0 : queries.token))
+            return;
+        (0, linear_1.getTeams)({ token: queries.token }).then(teams => {
+            var _a;
+            const teamId = (_a = teams.nodes) === null || _a === void 0 ? void 0 : _a[0].id;
+            if (teamId)
+                saveSettings({ key: 'defaultTeamId', value: teamId });
+        }).catch(() => {
+            doNotification({ body: 'Error on fetch Liner Teams', width: 400 });
+        });
+        saveSettings({ key: 'token', value: queries.token });
+        doNotification({ body: 'Linear settings as been saved', width: 400 });
+    }
+};
 class default_1 extends moon_1.MoonPlugin {
+    // https://linear.app/oauth/authorize?client_id=11672c0b84224c2a2a5fb10d7e3898a1&redirect_uri=http://localhost:3000/auth/linear&response_type=code&scope=read,write
     constructor(props) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         super(props);
-        this.name = 'Clickup';
-        this.logo = 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg';
+        this.name = 'Linear';
+        this.logo = 'https://linear.app/cdn-cgi/imagedelivery/fO02fVwohEs9s9UHFwon6A/82d07241-84b3-4cdf-33b5-a09b8d169300/f=auto,q=95,fit=scale-down,metadata=none';
         this.settingsDescription = {
             token: {
                 type: 'string',
                 required: true,
                 label: 'Token',
-                description: 'Clickup API token.'
+                description: 'Linear API token.'
             },
-            listId: {
+            defaultTeamId: {
                 type: 'string',
                 required: true,
-                label: 'Default List Id',
-                description: 'Clickup Default List Id for task, you can always change it by typing >> on the text editor.'
+                label: 'Default Team Id',
+                description: 'Default team to use.'
             },
             template: {
                 type: 'text',
                 required: true,
                 label: 'Template of capture',
-                description: 'Format your note result inside Clickup. [Documentation](https://github.com/castroCrea/moon-clickup-plugin/blob/main/README.md)',
+                description: 'Format your note result inside Linear. [Documentation](https://github.com/castroCrea/moon-linear-plugin/blob/main/README.md)',
                 default: template_1.DEFAULT_TEMPLATE
             }
         };
         this.settings = {
             token: '',
-            listId: '',
+            defaultTeamId: '',
             template: template_1.DEFAULT_TEMPLATE
         };
+        this.endpointCallbacks = [ENDPOINT];
         this.integration = {
             callback: ({ context, markdown }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-                if (!this.settings.listId)
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+                if (!this.settings.defaultTeamId)
                     return false;
                 const handleDateContent = (0, moon_utils_1.turnDate)({ content: this.settings.template });
                 const searchObj = Object.assign({ content: markdown }, context);
                 const handlePropertiesContent = (_a = (0, moon_utils_1.handleReplacingProperties)({ content: handleDateContent, searchObj })) !== null && _a !== void 0 ? _a : '';
                 let handleConditionContent = (_c = (_b = (0, moon_utils_1.handleConditions)({ content: handlePropertiesContent, searchObj })) === null || _b === void 0 ? void 0 : _b.trim()) !== null && _c !== void 0 ? _c : '';
-                const title = (0, moon_utils_1.extractTitleFromMarkdown)(handleConditionContent);
-                if (title)
+                const titleFromMarkdown = (0, moon_utils_1.extractTitleFromMarkdown)(handleConditionContent);
+                if (titleFromMarkdown)
                     handleConditionContent = handleConditionContent.split('\n').slice(1).join('\n');
-                const payload = {
-                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-                    name: title || context.source.title || (0, moon_utils_1.turnDate)({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
-                    markdown_description: handleConditionContent,
-                    tags: ((_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags.value) || [],
-                    priority: (_g = (_f = context.pluginPlayground) === null || _f === void 0 ? void 0 : _f.clickup) === null || _g === void 0 ? void 0 : _g.priority.value
-                };
-                const response = yield fetch(`https://api.clickup.com/api/v2/list/${(_j = (_h = context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.clickup.listId.value) !== null && _j !== void 0 ? _j : this.settings.listId}/task`, {
-                    method: 'POST',
-                    headers: {
-                        Authorization: this.settings.token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
+                const title = (_d = titleFromMarkdown !== null && titleFromMarkdown !== void 0 ? titleFromMarkdown : handleConditionContent.split('\n').pop()) !== null && _d !== void 0 ? _d : context.source.title;
+                const getTeamId = () => __awaiter(this, void 0, void 0, function* () {
+                    var _l, _m, _o, _p, _q, _r, _s;
+                    if ((_o = (_m = (_l = context.pluginPlayground) === null || _l === void 0 ? void 0 : _l.linear) === null || _m === void 0 ? void 0 : _m.teams) === null || _o === void 0 ? void 0 : _o.value) {
+                        return (_r = (_q = (_p = context.pluginPlayground) === null || _p === void 0 ? void 0 : _p.linear) === null || _q === void 0 ? void 0 : _q.teams) === null || _r === void 0 ? void 0 : _r.value[0];
+                    }
+                    else {
+                        const teams = yield (0, linear_1.getTeams)({ token: this.settings.token });
+                        const team = (_s = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _s === void 0 ? void 0 : _s[0];
+                        this.teamId = team === null || team === void 0 ? void 0 : team.id;
+                        return team === null || team === void 0 ? void 0 : team.id;
+                    }
                 });
-                const jsonResponse = yield response.json();
-                return jsonResponse.id ? { url: jsonResponse.url } : false;
+                const teamId = yield getTeamId();
+                if (!teamId)
+                    return false;
+                const payload = {
+                    title,
+                    description: handleConditionContent,
+                    teamId
+                };
+                if ((_g = (_f = (_e = context.pluginPlayground) === null || _e === void 0 ? void 0 : _e.linear) === null || _f === void 0 ? void 0 : _f.cycles) === null || _g === void 0 ? void 0 : _g.value) {
+                    payload.cycleId = (_k = (_j = (_h = context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.linear) === null || _j === void 0 ? void 0 : _j.cycles) === null || _k === void 0 ? void 0 : _k.value[0];
+                }
+                const issue = yield (0, linear_1.createIssue)(payload, this.settings.token);
+                if (!issue)
+                    return false;
+                return { url: issue.url, body: issue.identifier };
             }),
-            buttonIconUrl: 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
+            buttonIconUrl: 'https://linear.app/cdn-cgi/imagedelivery/fO02fVwohEs9s9UHFwon6A/82d07241-84b3-4cdf-33b5-a09b8d169300/f=auto,q=95,fit=scale-down,metadata=none'
         };
         this.mention = () => {
-            if (!this.settings.token || !this.settings.listId)
+            if (!this.settings.token)
                 return [];
             return [
                 {
-                    name: 'clickup_keywords',
+                    name: 'linear_teams_and_cycles',
                     char: '#',
                     htmlClass: 'mention_collections',
                     allowSpaces: true,
                     getListItem: () => __awaiter(this, void 0, void 0, function* () {
-                        var _a;
-                        const list = yield fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}`, {
-                            method: 'GET',
-                            headers: {
-                                Authorization: this.settings.token,
-                                'Content-Type': 'application/jso#n'
-                            }
-                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
-                        // this.log?.(JSON.stringify({ list }))
-                        const spaceId = (_a = list === null || list === void 0 ? void 0 : list.space) === null || _a === void 0 ? void 0 : _a.id;
-                        if (!spaceId)
-                            return [];
-                        const tagsResponse = yield fetch(`https://api.clickup.com/api/v2/space/${spaceId}/tag`, {
-                            method: 'GET',
-                            headers: {
-                                Authorization: this.settings.token,
-                                'Content-Type': 'application/json'
-                            }
-                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
-                        // this.log?.(JSON.stringify({ tagsResponse }))
-                        const tags = tagsResponse.tags;
-                        if (!tags)
-                            return [];
-                        const mentionTags = tags.map((tag) => ({
-                            title: tag.name,
-                            clickup_type: 'tag',
-                            background: tag.tag_fg
-                        }));
-                        const mentionPriority = [
-                            { title: 'none', clickup_type: 'priority', clickup_value: null },
-                            { title: 'Low', clickup_type: 'priority', clickup_value: 4, color: 'rgb(135, 144, 158)' },
-                            { title: 'Normal', clickup_type: 'priority', clickup_value: 3, color: 'rgb(68, 102, 255)' },
-                            { title: 'High', clickup_type: 'priority', clickup_value: 2, color: 'rgb(207, 148, 10)' },
-                            { title: 'Urgent', clickup_type: 'priority', clickup_value: 1, color: '#b13a41' }
-                        ];
-                        return [...mentionTags, ...mentionPriority];
+                        var _a, _b, _c, _d, _e, _f, _g;
+                        const teams = yield (0, linear_1.getTeams)({ token: this.settings.token });
+                        const teamId = (_b = (_a = this.teamId) !== null && _a !== void 0 ? _a : this.settings.defaultTeamId) !== null && _b !== void 0 ? _b : (_c = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _c === void 0 ? void 0 : _c[0].id;
+                        const mentionTeams = (_e = (_d = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _d === void 0 ? void 0 : _d.map(team => ({
+                            title: team.name,
+                            linear_type: 'teams',
+                            color: team.color,
+                            linear_value: team.id
+                        }))) !== null && _e !== void 0 ? _e : [];
+                        if (!teamId)
+                            return mentionTeams;
+                        const cycles = yield (0, linear_1.getCycles)({ token: this.settings.token, teamId });
+                        const cycleTeams = (_f = cycles === null || cycles === void 0 ? void 0 : cycles.map(cycle => ({
+                            title: `Cycle ${cycle.number}`,
+                            linear_type: 'cycles',
+                            linear_value: cycle.id
+                        }))) !== null && _f !== void 0 ? _f : [];
+                        (_g = this.log) === null || _g === void 0 ? void 0 : _g.call(this, JSON.stringify([...mentionTeams, ...cycleTeams]));
+                        return [...mentionTeams, ...cycleTeams];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
-                        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+                        var _a, _b, _c, _d, _e, _f;
                         deleteMentionPlaceholder();
-                        if (item.clickup_type === 'tag') {
-                            const tags = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.clickup) === null || _b === void 0 ? void 0 : _b.tags.value) !== null && _c !== void 0 ? _c : [];
-                            const tagsRender = (_f = (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.clickup) === null || _e === void 0 ? void 0 : _e.tags.render) !== null && _f !== void 0 ? _f : [];
-                            const tag = item.title;
-                            const index = tags.indexOf(tag);
-                            if (index === -1) {
-                                tags.push(tag);
-                                tagsRender.push({ background: item.background, color: item.color, title: item.title });
-                            }
-                            else {
-                                tags.splice(index, 1);
-                                tagsRender.splice(index, 1);
-                            }
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_g = context.pluginPlayground) !== null && _g !== void 0 ? _g : {})), { clickup: Object.assign(Object.assign({}, ((_j = (_h = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.clickup) !== null && _j !== void 0 ? _j : {})), { tags: {
-                                            value: tags,
-                                            render: tagsRender
-                                        } }) }) }));
-                        }
-                        else if (item.clickup_type === 'priority') {
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_k = context.pluginPlayground) !== null && _k !== void 0 ? _k : {})), { clickup: Object.assign(Object.assign({}, ((_m = (_l = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _l === void 0 ? void 0 : _l.clickup) !== null && _m !== void 0 ? _m : {})), { priority: {
-                                            value: [item.clickup_value],
+                        if (item.linear_type === 'teams') {
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { linear: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.linear) !== null && _c !== void 0 ? _c : {})), { teams: {
+                                            value: [item.linear_value],
                                             render: [{ title: item.title, color: item.color, background: item.background }]
                                         } }) }) }));
                         }
-                    }
-                },
-                {
-                    name: 'clickup_destination',
-                    char: '>>',
-                    htmlClass: 'mention_collections',
-                    allowSpaces: true,
-                    getListItem: () => __awaiter(this, void 0, void 0, function* () {
-                        var _b, _c;
-                        const list = yield fetch(`https://api.clickup.com/api/v2/list/${this.settings.listId}`, {
-                            method: 'GET',
-                            headers: {
-                                Authorization: this.settings.token,
-                                'Content-Type': 'application/jso#n'
-                            }
-                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
-                        // this.log?.(JSON.stringify({ list }))
-                        const folderId = (_b = list === null || list === void 0 ? void 0 : list.folder) === null || _b === void 0 ? void 0 : _b.id;
-                        const spaceId = (_c = list === null || list === void 0 ? void 0 : list.space) === null || _c === void 0 ? void 0 : _c.id;
-                        const foldersResponse = yield fetch(`https://api.clickup.com/api/v2/space/${spaceId}/folder?archived=false`, {
-                            method: 'GET',
-                            headers: {
-                                Authorization: this.settings.token,
-                                'Content-Type': 'application/json'
-                            }
-                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
-                        const folderLists = foldersResponse.folders.flatMap(l => l.lists);
-                        const listsResponse = yield fetch(`https://api.clickup.com/api/v2/folder/${folderId}/list?archived=false`, {
-                            method: 'GET',
-                            headers: {
-                                Authorization: this.settings.token,
-                                'Content-Type': 'application/json'
-                            }
-                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
-                        const spaceListsResponse = yield fetch(`https://api.clickup.com/api/v2/space/${spaceId}/list`, {
-                            method: 'GET',
-                            headers: {
-                                Authorization: this.settings.token,
-                                'Content-Type': 'application/json'
-                            }
-                        }).then((r) => __awaiter(this, void 0, void 0, function* () { return yield r.json(); }));
-                        // this.log?.(JSON.stringify({ tagsResponse }))
-                        const lists = [...folderLists, ...listsResponse.lists, ...spaceListsResponse.lists];
-                        if (!lists)
-                            return [];
-                        const mentionLits = lists.filter(l => !l.archived).map((list) => ({
-                            title: list.name,
-                            clickup_type: 'list',
-                            id: list.id
-                        }));
-                        return mentionLits;
-                    }),
-                    onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
-                        var _a, _b, _c;
-                        deleteMentionPlaceholder();
-                        setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { clickup: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.clickup) !== null && _c !== void 0 ? _c : {})), { listId: {
-                                        value: [item.id],
-                                        render: [{ title: item.title, color: item.color, background: item.background }]
-                                    } }) }) }));
+                        if (item.linear_type === 'cycles') {
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_d = context.pluginPlayground) !== null && _d !== void 0 ? _d : {})), { linear: Object.assign(Object.assign({}, ((_f = (_e = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _e === void 0 ? void 0 : _e.linear) !== null && _f !== void 0 ? _f : {})), { cycles: {
+                                            value: [item.linear_value],
+                                            render: [{ title: item.title, color: item.color, background: item.background }]
+                                        } }) }) }));
+                        }
                     }
                 }
             ];
@@ -218,6 +170,16 @@ class default_1 extends moon_1.MoonPlugin {
         if (props.settings)
             this.settings = Object.assign(Object.assign({}, this.settings), props.settings);
         this.log = props.helpers.moonLog;
+        this.settingsButtons = [
+            {
+                type: 'button',
+                callback: () => {
+                    window.open('https://linear.app/oauth/authorize?client_id=11672c0b84224c2a2a5fb10d7e3898a1&redirect_uri=https://moonjot.com/auth/linear&response_type=code&scope=read,write', '_blank');
+                },
+                label: 'Auth with Linear',
+                description: 'Get my access.'
+            }
+        ];
     }
 }
 exports.default = default_1;

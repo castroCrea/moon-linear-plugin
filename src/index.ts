@@ -1,15 +1,17 @@
-import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription, type PluginMentionItem } from '@moonjot/moon'
+import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription, type PluginMentionItem, type EndpointCallbackItem } from '@moonjot/moon'
 import { extractTitleFromMarkdown, handleConditions, handleReplacingProperties, turnDate } from '@moonjot/moon-utils'
 import { DEFAULT_TEMPLATE } from './template'
+import { createIssue, getCycles, getTeams } from './linear'
+import { type IssueCreate } from './linear.type'
 
-interface ClickupPluginSettingsDescription extends PluginSettingsDescription {
+interface LinearPluginSettingsDescription extends PluginSettingsDescription {
   token: {
     type: 'string'
     required: boolean
     label: string
     description: string
   }
-  listId: {
+  defaultTeamId: {
     type: 'string'
     required: boolean
     label: string
@@ -24,52 +26,92 @@ interface ClickupPluginSettingsDescription extends PluginSettingsDescription {
   }
 }
 
-interface ClickupPluginSettings extends MoonPluginSettings {
+interface LinearPluginSettings extends MoonPluginSettings {
   token: string
+  defaultTeamId: string
   template: string
 }
 
-export default class extends MoonPlugin {
-  name: string = 'Clickup'
-  logo: string = 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
+const ENDPOINT: EndpointCallbackItem = {
+  endpoint: 'auth/linear',
+  callback: ({ url, saveSettings, doNotification }) => {
+    const queries = url.split('?').pop()?.split('&').reduce((acc: Record<string, string>, query: string) => {
+      const queryString = query.split('=')
+      const key = queryString[0]
+      const value = queryString[1]
+      if (!key || !value) return acc
+      return { ...acc, [key]: value }
+    }, {})
+    if (!queries?.token) return
+    getTeams({ token: queries.token }).then(teams => {
+      const teamId = teams.nodes?.[0].id
+      if (teamId) saveSettings({ key: 'defaultTeamId', value: teamId })
+    }).catch(() => {
+      doNotification({ body: 'Error on fetch Liner Teams', width: 400 })
+    })
 
-  settingsDescription: ClickupPluginSettingsDescription = {
+    saveSettings({ key: 'token', value: queries.token })
+    doNotification({ body: 'Linear settings as been saved', width: 400 })
+  }
+}
+
+export default class extends MoonPlugin {
+  name: string = 'Linear'
+  logo: string = 'https://linear.app/cdn-cgi/imagedelivery/fO02fVwohEs9s9UHFwon6A/82d07241-84b3-4cdf-33b5-a09b8d169300/f=auto,q=95,fit=scale-down,metadata=none'
+
+  settingsDescription: LinearPluginSettingsDescription = {
     token: {
       type: 'string',
       required: true,
       label: 'Token',
-      description: 'Clickup API token.'
+      description: 'Linear API token.'
     },
-    listId: {
+    defaultTeamId: {
       type: 'string',
       required: true,
-      label: 'Default List Id',
-      description: 'Clickup Default List Id for task, you can always change it by typing >> on the text editor.'
+      label: 'Default Team Id',
+      description: 'Default team to use.'
     },
     template: {
       type: 'text',
       required: true,
       label: 'Template of capture',
-      description: 'Format your note result inside Clickup. [Documentation](https://github.com/castroCrea/moon-clickup-plugin/blob/main/README.md)',
+      description: 'Format your note result inside Linear. [Documentation](https://github.com/castroCrea/moon-linear-plugin/blob/main/README.md)',
       default: DEFAULT_TEMPLATE
     }
   }
 
-  settings: ClickupPluginSettings = {
+  settings: LinearPluginSettings = {
     token: '',
-    listId: '',
+    defaultTeamId: '',
     template: DEFAULT_TEMPLATE
   }
 
   log: ((log: string) => void) | undefined
 
-  constructor (props?: MoonPluginConstructorProps<ClickupPluginSettings>) {
+  teamId: string | undefined
+
+  // https://linear.app/oauth/authorize?client_id=11672c0b84224c2a2a5fb10d7e3898a1&redirect_uri=http://localhost:3000/auth/linear&response_type=code&scope=read,write
+  constructor (props?: MoonPluginConstructorProps<LinearPluginSettings>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     super(props)
     if (!props) return
     if (props.settings) this.settings = { ...this.settings, ...props.settings }
     this.log = props.helpers.moonLog
+
+    this.settingsButtons = [
+      {
+        type: 'button',
+        callback: () => {
+          window.open('https://linear.app/oauth/authorize?client_id=11672c0b84224c2a2a5fb10d7e3898a1&redirect_uri=https://moonjot.com/auth/linear&response_type=code&scope=read,write', '_blank')
+        },
+        label: 'Auth with Linear',
+        description: 'Get my access.'
+      }
+    ]
   }
+
+  endpointCallbacks = [ENDPOINT]
 
   integration = {
     callback: async ({ context, markdown }: {
@@ -78,7 +120,7 @@ export default class extends MoonPlugin {
       context: Context
     }
     ) => {
-      if (!this.settings.listId) return false
+      if (!this.settings.defaultTeamId) return false
       const handleDateContent = turnDate({ content: this.settings.template })
 
       const searchObj = {
@@ -90,216 +132,110 @@ export default class extends MoonPlugin {
 
       let handleConditionContent = handleConditions({ content: handlePropertiesContent, searchObj })?.trim() ?? ''
 
-      const title = extractTitleFromMarkdown(handleConditionContent)
+      const titleFromMarkdown = extractTitleFromMarkdown(handleConditionContent)
 
-      if (title) handleConditionContent = handleConditionContent.split('\n').slice(1).join('\n')
+      if (titleFromMarkdown) handleConditionContent = handleConditionContent.split('\n').slice(1).join('\n')
+      const title = titleFromMarkdown ?? handleConditionContent.split('\n').pop() ?? context.source.title
 
-      const payload = {
-        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-        name: title || context.source.title || turnDate({ content: '{{DATE}}YYYY-MM-DD HH:mm{{END_DATE}}' }),
-        markdown_description: handleConditionContent,
-        tags: context.pluginPlayground?.clickup?.tags.value || [],
-        priority: context.pluginPlayground?.clickup?.priority.value
+      const getTeamId = async () => {
+        if (context.pluginPlayground?.linear?.teams?.value) {
+          return context.pluginPlayground?.linear?.teams?.value[0]
+        } else {
+          const teams = await getTeams({ token: this.settings.token })
+          const team = teams?.nodes?.[0]
+          this.teamId = team?.id
+          return team?.id
+        }
       }
 
-      const response = await fetch(`https://api.clickup.com/api/v2/list/${context.pluginPlayground?.clickup.listId.value ?? this.settings.listId}/task`, {
-        method: 'POST',
-        headers: {
-          Authorization: this.settings.token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      })
+      const teamId = await getTeamId()
 
-      const jsonResponse = await response.json()
-      return jsonResponse.id ? { url: jsonResponse.url } : false
+      if (!teamId) return false
+
+      const payload: IssueCreate = {
+        title,
+        description: handleConditionContent,
+        teamId
+      }
+
+      if (context.pluginPlayground?.linear?.cycles?.value) {
+        payload.cycleId = context.pluginPlayground?.linear?.cycles?.value[0]
+      }
+
+      const issue = await createIssue(payload, this.settings.token)
+
+      if (!issue) return false
+
+      return { url: issue.url, body: issue.identifier }
     },
-    buttonIconUrl: 'https://app-cdn.clickup.com/fr-FR/clickup-symbol_color.6c3fc778987344003164b4b4c9826eb8.svg'
+    buttonIconUrl: 'https://linear.app/cdn-cgi/imagedelivery/fO02fVwohEs9s9UHFwon6A/82d07241-84b3-4cdf-33b5-a09b8d169300/f=auto,q=95,fit=scale-down,metadata=none'
   }
 
   mention = (): PluginMentionItem[] => {
-    if (!this.settings.token || !this.settings.listId) return []
+    if (!this.settings.token) return []
     return [
       {
-        name: 'clickup_keywords',
+        name: 'linear_teams_and_cycles',
         char: '#',
         htmlClass: 'mention_collections',
         allowSpaces: true,
         getListItem: async () => {
-          const list = await fetch(
-            `https://api.clickup.com/api/v2/list/${this.settings.listId}`,
-            {
-              method: 'GET',
-              headers: {
-                Authorization: this.settings.token,
-                'Content-Type': 'application/jso#n'
-              }
-            }
-          ).then(async r => await r.json())
+          const teams = await getTeams({ token: this.settings.token })
+          const teamId = this.teamId ?? this.settings.defaultTeamId ?? teams?.nodes?.[0].id
 
-          // this.log?.(JSON.stringify({ list }))
-          const spaceId = list?.space?.id
-          if (!spaceId) return []
+          const mentionTeams = teams?.nodes?.map(team => ({
+            title: team.name,
+            linear_type: 'teams',
+            color: team.color,
+            linear_value: team.id
+          })) ?? []
 
-          const tagsResponse = await fetch(
-          `https://api.clickup.com/api/v2/space/${spaceId}/tag`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: this.settings.token,
-              'Content-Type': 'application/json'
-            }
-          }
-          ).then(async r => await r.json())
-          // this.log?.(JSON.stringify({ tagsResponse }))
+          if (!teamId) return mentionTeams
+          const cycles = await getCycles({ token: this.settings.token, teamId })
 
-          const tags = tagsResponse.tags
-          if (!tags) return []
-          const mentionTags = tags.map((tag: { name: string, tag_fg: string, tag_bg: string }) => ({
-            title: tag.name,
-            clickup_type: 'tag',
-            background: tag.tag_fg
-          }))
+          const cycleTeams = cycles?.map(cycle => ({
+            title: `Cycle ${cycle.number}`,
+            linear_type: 'cycles',
+            linear_value: cycle.id
+          })) ?? []
 
-          const mentionPriority = [
-            { title: 'none', clickup_type: 'priority', clickup_value: null },
-            { title: 'Low', clickup_type: 'priority', clickup_value: 4, color: 'rgb(135, 144, 158)' },
-            { title: 'Normal', clickup_type: 'priority', clickup_value: 3, color: 'rgb(68, 102, 255)' },
-            { title: 'High', clickup_type: 'priority', clickup_value: 2, color: 'rgb(207, 148, 10)' },
-            { title: 'Urgent', clickup_type: 'priority', clickup_value: 1, color: '#b13a41' }
-          ]
+          this.log?.(JSON.stringify([...mentionTeams, ...cycleTeams]))
 
-          return [...mentionTags, ...mentionPriority]
+          return [...mentionTeams, ...cycleTeams]
         },
         onSelectItem: (
           { item, setContext, context, deleteMentionPlaceholder }) => {
           deleteMentionPlaceholder()
-          if (item.clickup_type === 'tag') {
-            const tags = context.pluginPlayground?.clickup?.tags.value ?? []
-            const tagsRender = context.pluginPlayground?.clickup?.tags.render ?? []
-            const tag = item.title
-            const index = tags.indexOf(tag)
 
-            if (index === -1) {
-              tags.push(tag)
-              tagsRender.push({ background: item.background, color: item.color, title: item.title })
-            } else {
-              tags.splice(index, 1)
-              tagsRender.splice(index, 1)
-            }
+          if (item.linear_type === 'teams') {
             setContext({
               ...context,
               pluginPlayground: {
                 ...(context.pluginPlayground ?? {}),
-                clickup: {
-                  ...(context?.pluginPlayground?.clickup ?? {}),
-                  tags: {
-                    value: tags,
-                    render: tagsRender
+                linear: {
+                  ...(context?.pluginPlayground?.linear ?? {}),
+                  teams: {
+                    value: [item.linear_value as string],
+                    render: [{ title: item.title, color: item.color, background: item.background }]
                   }
                 }
               }
             })
-          } else if (item.clickup_type === 'priority') {
+          } if (item.linear_type === 'cycles') {
             setContext({
               ...context,
               pluginPlayground: {
                 ...(context.pluginPlayground ?? {}),
-                clickup: {
-                  ...(context?.pluginPlayground?.clickup ?? {}),
-                  priority: {
-                    value: [item.clickup_value as string],
+                linear: {
+                  ...(context?.pluginPlayground?.linear ?? {}),
+                  cycles: {
+                    value: [item.linear_value as string],
                     render: [{ title: item.title, color: item.color, background: item.background }]
                   }
                 }
               }
             })
           }
-        }
-      },
-      {
-        name: 'clickup_destination',
-        char: '>>',
-        htmlClass: 'mention_collections',
-        allowSpaces: true,
-        getListItem: async () => {
-          const list = await fetch(
-            `https://api.clickup.com/api/v2/list/${this.settings.listId}`,
-            {
-              method: 'GET',
-              headers: {
-                Authorization: this.settings.token,
-                'Content-Type': 'application/jso#n'
-              }
-            }
-          ).then(async r => await r.json())
-
-          // this.log?.(JSON.stringify({ list }))
-          const folderId = list?.folder?.id
-          const spaceId = list?.space?.id
-
-          const foldersResponse = await fetch(
-            `https://api.clickup.com/api/v2/space/${spaceId}/folder?archived=false`,
-            {
-              method: 'GET',
-              headers: {
-                Authorization: this.settings.token,
-                'Content-Type': 'application/json'
-              }
-            }
-          ).then(async r => await r.json())
-
-          const folderLists = (foldersResponse.folders as Array<{ lists: Array<{ id: string }> }>).flatMap(l => l.lists)
-
-          const listsResponse = await fetch(
-          `https://api.clickup.com/api/v2/folder/${folderId}/list?archived=false`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: this.settings.token,
-              'Content-Type': 'application/json'
-            }
-          }
-          ).then(async r => await r.json())
-
-          const spaceListsResponse = await fetch(
-          `https://api.clickup.com/api/v2/space/${spaceId}/list`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: this.settings.token,
-              'Content-Type': 'application/json'
-            }
-          }
-          ).then(async r => await r.json())
-          // this.log?.(JSON.stringify({ tagsResponse }))
-
-          const lists: Array<{ name: string, archived: boolean, id: string }> = [...folderLists, ...listsResponse.lists, ...spaceListsResponse.lists]
-          if (!lists) return []
-          const mentionLits = lists.filter(l => !l.archived).map((list) => ({
-            title: list.name,
-            clickup_type: 'list',
-            id: list.id
-          }))
-
-          return mentionLits
-        },
-        onSelectItem: (
-          { item, setContext, context, deleteMentionPlaceholder }) => {
-          deleteMentionPlaceholder()
-          setContext({
-            ...context,
-            pluginPlayground: {
-              ...(context.pluginPlayground ?? {}),
-              clickup: {
-                ...(context?.pluginPlayground?.clickup ?? {}),
-                listId: {
-                  value: [item.id as string],
-                  render: [{ title: item.title, color: item.color, background: item.background }]
-                }
-              }
-            }
-          })
         }
       }
     ]

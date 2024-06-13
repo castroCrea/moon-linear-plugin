@@ -1,13 +1,13 @@
-# [Clickup](https://clickup.com/) Plugin for [Moon Jot](moonjot.com)
+# [Linear.app](https://linear.app.com/) Plugin for [Moon Jot](moonjot.com)
 
-<span class="badge-npmversion"><a href="https://npmjs.org/package/@moonjot/moon-clickup-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/v/@moonjot/moon-clickup-plugin.svg" alt="NPM version" /></a></span>
-<span class="badge-npmdownloads"><a href="https://npmjs.org/package/@moonjot/moon-clickup-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/@moonjot/moon-clickup-plugin.svg" alt="NPM downloads" /></a></span>
+<span class="badge-npmversion"><a href="https://npmjs.org/package/@moonjot/moon-linear-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/v/@moonjot/moon-linear-plugin.svg" alt="NPM version" /></a></span>
+<span class="badge-npmdownloads"><a href="https://npmjs.org/package/@moonjot/moon-linear-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/@moonjot/moon-linear-plugin.svg" alt="NPM downloads" /></a></span>
 
 
 
-Send Note from your OS to [Clickup](https://clickup.com/) with your current context. Make it faster to capture into Clickup.
+Send Note from your OS to [Linear.app](https://linear.app/) with your current context. Make it faster to capture into Linear.app.
 
-Get Clickup token
+Get Linear.app token
 
 Go to settings
 
