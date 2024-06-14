@@ -106,7 +106,10 @@ export default class extends MoonPlugin {
           window.open('https://linear.app/oauth/authorize?client_id=11672c0b84224c2a2a5fb10d7e3898a1&redirect_uri=https://moonjot.com/auth/linear&response_type=code&scope=read,write', '_blank')
         },
         label: 'Auth with Linear',
-        description: 'Get my access.'
+        description: `Get my access.\n
+Use >> to set Team and Cycle\n
+Use # to set Project and Labels\n
+Use @ to set Assignee and Subscriber\n`
       }
     ]
   }
@@ -135,7 +138,7 @@ export default class extends MoonPlugin {
       const titleFromMarkdown = extractTitleFromMarkdown(handleConditionContent)
 
       if (titleFromMarkdown) handleConditionContent = handleConditionContent.split('\n').slice(1).join('\n')
-      const title = titleFromMarkdown ?? handleConditionContent.split('\n').pop() ?? context.source.title
+      const title = titleFromMarkdown ?? handleConditionContent.split('\n')[0] ?? context.source.title
 
       const getTeamId = async () => {
         if (context.pluginPlayground?.linear?.teams?.value) {
@@ -162,6 +165,22 @@ export default class extends MoonPlugin {
         payload.cycleId = context.pluginPlayground?.linear?.cycles?.value[0]
       }
 
+      if (context.pluginPlayground?.linear?.projects?.value) {
+        payload.projectId = context.pluginPlayground?.linear?.projects?.value[0]
+      }
+
+      if (context.pluginPlayground?.linear?.labels?.value) {
+        payload.labelIds = context.pluginPlayground?.linear?.labels?.value
+      }
+
+      if (context.pluginPlayground?.linear?.assignee?.value) {
+        payload.assigneeId = context.pluginPlayground?.linear?.assignee?.value[0]
+      }
+
+      if (context.pluginPlayground?.linear?.subscriber?.value) {
+        payload.subscriberIds = context.pluginPlayground?.linear?.subscriber?.value
+      }
+
       const issue = await createIssue(payload, this.settings.token)
 
       if (!issue) return false
@@ -176,7 +195,7 @@ export default class extends MoonPlugin {
     return [
       {
         name: 'linear_teams_and_cycles',
-        char: '#',
+        char: '>>',
         htmlClass: 'mention_collections',
         allowSpaces: true,
         getListItem: async () => {
@@ -193,15 +212,15 @@ export default class extends MoonPlugin {
           if (!teamId) return mentionTeams
           const cycles = await getCycles({ token: this.settings.token, teamId })
 
-          const cycleTeams = cycles?.map(cycle => ({
+          const mentionCycles = cycles?.map(cycle => ({
             title: `Cycle ${cycle.number}`,
             linear_type: 'cycles',
             linear_value: cycle.id
           })) ?? []
 
-          this.log?.(JSON.stringify([...mentionTeams, ...cycleTeams]))
+          // this.log?.(JSON.stringify([...mentionTeams, ...mentionCycles]))
 
-          return [...mentionTeams, ...cycleTeams]
+          return [...mentionTeams, ...mentionCycles]
         },
         onSelectItem: (
           { item, setContext, context, deleteMentionPlaceholder }) => {
@@ -230,6 +249,148 @@ export default class extends MoonPlugin {
                   ...(context?.pluginPlayground?.linear ?? {}),
                   cycles: {
                     value: [item.linear_value as string],
+                    render: [{ title: item.title, color: item.color, background: item.background }]
+                  }
+                }
+              }
+            })
+          }
+        }
+      },
+      {
+        name: 'linear_project_label',
+        char: '#',
+        htmlClass: 'mention_collections',
+        allowSpaces: true,
+        getListItem: async () => {
+          const teams = await getTeams({ token: this.settings.token })
+          const teamId = this.teamId ?? this.settings.defaultTeamId ?? teams?.nodes?.[0].id
+
+          if (!teamId) return []
+
+          const team = teams?.nodes?.find(team => team.id === teamId)
+
+          const mentionLabels = team?.labels?.nodes?.map(label => ({
+            title: label.name,
+            linear_type: 'label',
+            background: label.color,
+            linear_value: label.id
+          })) ?? []
+
+          const mentionProject = team?.projects?.nodes?.map(project => ({
+            title: `${project.icon} ${project.name}`,
+            linear_type: 'projects',
+            background: project.color,
+            linear_value: project.id
+          })) ?? []
+
+          // this.log?.(JSON.stringify([...mentionProject, ...mentionLabels]))
+
+          return [...mentionProject, ...mentionLabels]
+        },
+        onSelectItem: (
+          { item, setContext, context, deleteMentionPlaceholder }) => {
+          deleteMentionPlaceholder()
+
+          if (item.linear_type === 'projects') {
+            setContext({
+              ...context,
+              pluginPlayground: {
+                ...(context.pluginPlayground ?? {}),
+                linear: {
+                  ...(context?.pluginPlayground?.linear ?? {}),
+                  project: {
+                    value: [item.linear_value as string],
+                    render: [{ title: item.title, color: item.color, background: item.background }]
+                  }
+                }
+              }
+            })
+          } if (item.linear_type === 'label') {
+            const labels = context.pluginPlayground?.linear?.labels?.value ?? []
+            const label = item.linear_value as string
+            const newLabels = labels.includes(label) ? labels.filter(l => l !== label) : [...labels, label]
+            setContext({
+              ...context,
+              pluginPlayground: {
+                ...(context.pluginPlayground ?? {}),
+                linear: {
+                  ...(context?.pluginPlayground?.linear ?? {}),
+                  labels: {
+                    value: newLabels,
+                    render: [{ title: item.title, color: item.color, background: item.background }]
+                  }
+                }
+              }
+            })
+          }
+        }
+      },
+      {
+        name: 'linear_subscriber_label',
+        char: '@',
+        htmlClass: 'mention_collections',
+        allowSpaces: true,
+        getListItem: async () => {
+          const teams = await getTeams({ token: this.settings.token })
+          const teamId = this.teamId ?? this.settings.defaultTeamId ?? teams?.nodes?.[0].id
+
+          if (!teamId) return []
+
+          const team = teams?.nodes?.find(team => team.id === teamId)
+
+          const mentionAssignee = team?.members?.nodes?.map(person => ({
+            title: `${person.displayName} - Assignee`,
+            linear_type: 'assignee',
+            linear_value: person.id,
+            logoProps: {
+              logo: person.avatarUrl,
+              name: person.displayName
+            }
+          })) ?? []
+
+          const mentionSubscriber = team?.members?.nodes?.map(person => ({
+            title: `${person.displayName} - Subscriber`,
+            linear_type: 'subscriber',
+            linear_value: person.id,
+            logoProps: {
+              logo: person.avatarUrl,
+              name: person.displayName
+            }
+          })) ?? []
+
+          return [...mentionAssignee, ...mentionSubscriber]
+        },
+        onSelectItem: (
+          { item, setContext, context, deleteMentionPlaceholder }) => {
+          deleteMentionPlaceholder()
+
+          if (item.linear_type === 'assignee') {
+            setContext({
+              ...context,
+              pluginPlayground: {
+                ...(context.pluginPlayground ?? {}),
+                linear: {
+                  ...(context?.pluginPlayground?.linear ?? {}),
+                  assignees: {
+                    value: [item.linear_value as string],
+                    render: [{ title: item.title, color: item.color, background: item.background }]
+                  }
+                }
+              }
+            })
+          } if (item.linear_type === 'subscriber') {
+            const labels = context.pluginPlayground?.linear?.labels?.value ?? []
+            const label = item.linear_value as string
+            const newLabels = labels.includes(label) ? labels.filter(l => l !== label) : [...labels, label]
+            setContext({
+              ...context,
+              pluginPlayground: {
+                ...(context.pluginPlayground ?? {}),
+                linear: {
+                  ...(context?.pluginPlayground?.linear ?? {}),
+                  subscribers: {
+                    value: newLabels,
                     render: [{ title: item.title, color: item.color, background: item.background }]
                   }
                 }

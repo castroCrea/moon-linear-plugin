@@ -275,6 +275,29 @@ const getTeams = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
                         type
                     }
                 }
+                members(filter: { active: { eq: true } }) {
+                    nodes {
+                        id
+                        name
+                        displayName
+                        email
+                        avatarUrl
+                        statusEmoji
+                        statusLabel
+                        active
+                        isMe
+                    }
+                }
+                projects(orderBy: updatedAt) {
+                    nodes {
+                        id
+                        name
+                        icon
+                        color
+                        state
+                        url
+                    }
+                }
             }
         }
 }`

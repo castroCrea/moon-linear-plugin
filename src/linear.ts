@@ -284,6 +284,29 @@ export const getTeams = async ({ token }: { token: string }): Promise<Partial<Us
                         type
                     }
                 }
+                members(filter: { active: { eq: true } }) {
+                    nodes {
+                        id
+                        name
+                        displayName
+                        email
+                        avatarUrl
+                        statusEmoji
+                        statusLabel
+                        active
+                        isMe
+                    }
+                }
+                projects(orderBy: updatedAt) {
+                    nodes {
+                        id
+                        name
+                        icon
+                        color
+                        state
+                        url
+                    }
+                }
             }
         }
 }`

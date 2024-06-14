@@ -3,8 +3,6 @@
 <span class="badge-npmversion"><a href="https://npmjs.org/package/@moonjot/moon-linear-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/v/@moonjot/moon-linear-plugin.svg" alt="NPM version" /></a></span>
 <span class="badge-npmdownloads"><a href="https://npmjs.org/package/@moonjot/moon-linear-plugin" title="View this project on NPM"><img src="https://img.shields.io/npm/dm/@moonjot/moon-linear-plugin.svg" alt="NPM downloads" /></a></span>
 
-
-
 Send Note from your OS to [Linear.app](https://linear.app/) with your current context. Make it faster to capture into Linear.app.
 
 Get Linear.app token
@@ -26,6 +24,11 @@ Generate you key and past it into Settings
 ## Automatic tags
 
 You can auto-generate tags by adding the path to the context object property separated by ','. Refer to the provided documentation that explains 'context object' such as 'source.type, source.location'. [Documentation](https://github.com/castroCrea/moon/blob/b35e939b7b137871896f2c61413045153d3c4310/src/FetchContext.type.ts#L52-L53).
+
+## TODO
+
+- [ ] Add template
+- [ ] Add preset values
 
 ## Template
 
