@@ -275,6 +275,14 @@ const getTeams = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
                         type
                     }
                 }
+                templates {
+                    nodes {
+                        id
+                        type
+                        name
+                        templateData
+                    }
+                }
                 members(filter: { active: { eq: true } }) {
                     nodes {
                         id

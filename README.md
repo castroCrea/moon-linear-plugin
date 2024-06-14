@@ -27,8 +27,9 @@ You can auto-generate tags by adding the path to the context object property sep
 
 ## TODO
 
-- [ ] Add template
+- [x] Add template
 - [ ] Add preset values
+  - Display subscriber and teams settings with select element
 
 ## Template
 

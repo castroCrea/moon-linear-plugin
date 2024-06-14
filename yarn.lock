@@ -65,10 +65,10 @@
   dependencies:
     js-yaml "^4.1.0"
 
-"@moonjot/moon@^0.1.95":
-  version "0.1.95"
-  resolved "https://registry.yarnpkg.com/@moonjot/moon/-/moon-0.1.95.tgz#65bf3cdce6fe623a5d338a3a16c1c072a9de367f"
-  integrity sha512-+hBMJPSsD9cL6G+WfEtHKtFBBCYMM88vQDU9tDBlTpvdAcCvVQmnatCnAJl5OCalq87JQKKy3kG3WT0apAh0/g==
+"@moonjot/moon@^0.1.97":
+  version "0.1.97"
+  resolved "https://registry.yarnpkg.com/@moonjot/moon/-/moon-0.1.97.tgz#2991a7ce6e010ed6a276f4278a1c008086cac7bc"
+  integrity sha512-HkNGEvKuBZJSeuyLZNlVKEsP3HViGXEhzsKMgI2mqiqjhdVef8VTRUw5qRf68ZOHXONH3do4tnu9QYOzs3RIrA==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

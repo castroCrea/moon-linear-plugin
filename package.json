@@ -4,7 +4,7 @@
   "description": "Plugin Linear for Moon Jot",
   "main": "./dist/index.js",
   "dependencies": {
-    "@moonjot/moon": "^0.1.95",
+    "@moonjot/moon": "^0.1.97",
     "@moonjot/moon-utils": "^0.0.9"
   },
   "repository": {

@@ -260,7 +260,7 @@ class default_1 extends moon_1.MoonPlugin {
                         if (item.linear_type === 'assignee') {
                             setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { linear: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.linear) !== null && _c !== void 0 ? _c : {})), { assignees: {
                                             value: [item.linear_value],
-                                            render: [{ title: item.title, color: item.color, background: item.background }]
+                                            render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
                                         } }) }) }));
                         }
                         if (item.linear_type === 'subscriber') {
@@ -269,6 +269,46 @@ class default_1 extends moon_1.MoonPlugin {
                             const newLabels = labels.includes(label) ? labels.filter(l => l !== label) : [...labels, label];
                             setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_h = context.pluginPlayground) !== null && _h !== void 0 ? _h : {})), { linear: Object.assign(Object.assign({}, ((_k = (_j = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _j === void 0 ? void 0 : _j.linear) !== null && _k !== void 0 ? _k : {})), { subscribers: {
                                             value: newLabels,
+                                            render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
+                                        } }) }) }));
+                        }
+                    }
+                },
+                {
+                    name: 'linear_template_label',
+                    char: '$',
+                    htmlClass: 'mention_collections',
+                    allowSpaces: true,
+                    getListItem: () => __awaiter(this, void 0, void 0, function* () {
+                        var _2, _3, _4, _5, _6, _7, _8, _9, _10, _11;
+                        const teams = yield (0, linear_1.getTeams)({ token: this.settings.token });
+                        const teamId = (_3 = (_2 = this.teamId) !== null && _2 !== void 0 ? _2 : this.settings.defaultTeamId) !== null && _3 !== void 0 ? _3 : (_4 = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _4 === void 0 ? void 0 : _4[0].id;
+                        if (!teamId)
+                            return [];
+                        const team = (_5 = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _5 === void 0 ? void 0 : _5.find(team => team.id === teamId);
+                        const mentionTemplates = (_8 = (_7 = (_6 = team === null || team === void 0 ? void 0 : team.templates) === null || _6 === void 0 ? void 0 : _6.nodes) === null || _7 === void 0 ? void 0 : _7.map(template => ({
+                            title: template.name,
+                            linear_type: 'templates',
+                            linear_value: template.templateData
+                        }))) !== null && _8 !== void 0 ? _8 : [];
+                        const mentionStates = (_11 = (_10 = (_9 = team === null || team === void 0 ? void 0 : team.states) === null || _9 === void 0 ? void 0 : _9.nodes) === null || _10 === void 0 ? void 0 : _10.map(state => ({
+                            title: state.type,
+                            linear_type: 'states',
+                            color: state.color,
+                            linear_value: state.id
+                        }))) !== null && _11 !== void 0 ? _11 : [];
+                        return [...mentionTemplates, ...mentionStates];
+                    }),
+                    onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder, editor }) => {
+                        var _a, _b, _c;
+                        deleteMentionPlaceholder();
+                        if (item.linear_type === 'templates') {
+                            editor.commands.insertContent({ value: item.linear_value });
+                            return;
+                        }
+                        if (item.linear_type === 'states') {
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { linear: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.linear) !== null && _c !== void 0 ? _c : {})), { states: {
+                                            value: [item.linear_value],
                                             render: [{ title: item.title, color: item.color, background: item.background }]
                                         } }) }) }));
                         }
@@ -291,7 +331,8 @@ class default_1 extends moon_1.MoonPlugin {
                 description: `Get my access.\n
 Use >> to set Team and Cycle\n
 Use # to set Project and Labels\n
-Use @ to set Assignee and Subscriber\n`
+Use @ to set Assignee and Subscriber\n
+Use $ to set Assignee and Subscriber\n`
             }
         ];
     }

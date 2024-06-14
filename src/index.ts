@@ -109,7 +109,8 @@ export default class extends MoonPlugin {
         description: `Get my access.\n
 Use >> to set Team and Cycle\n
 Use # to set Project and Labels\n
-Use @ to set Assignee and Subscriber\n`
+Use @ to set Assignee and Subscriber\n
+Use $ to set Assignee and Subscriber\n`
       }
     ]
   }
@@ -374,7 +375,7 @@ Use @ to set Assignee and Subscriber\n`
                   ...(context?.pluginPlayground?.linear ?? {}),
                   assignees: {
                     value: [item.linear_value as string],
-                    render: [{ title: item.title, color: item.color, background: item.background }]
+                    render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
                   }
                 }
               }
@@ -391,6 +392,60 @@ Use @ to set Assignee and Subscriber\n`
                   ...(context?.pluginPlayground?.linear ?? {}),
                   subscribers: {
                     value: newLabels,
+                    render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
+                  }
+                }
+              }
+            })
+          }
+        }
+      },
+      {
+        name: 'linear_template_label',
+        char: '$',
+        htmlClass: 'mention_collections',
+        allowSpaces: true,
+        getListItem: async () => {
+          const teams = await getTeams({ token: this.settings.token })
+          const teamId = this.teamId ?? this.settings.defaultTeamId ?? teams?.nodes?.[0].id
+
+          if (!teamId) return []
+
+          const team = teams?.nodes?.find(team => team.id === teamId)
+
+          const mentionTemplates = team?.templates?.nodes?.map(template => ({
+            title: template.name,
+            linear_type: 'templates',
+            linear_value: template.templateData
+          })) ?? []
+
+          const mentionStates = team?.states?.nodes?.map(state => ({
+            title: state.type,
+            linear_type: 'states',
+            color: state.color,
+            linear_value: state.id
+          })) ?? []
+
+          return [...mentionTemplates, ...mentionStates]
+        },
+        onSelectItem: (
+          { item, setContext, context, deleteMentionPlaceholder, editor }) => {
+          deleteMentionPlaceholder()
+
+          if (item.linear_type === 'templates') {
+            editor.commands.insertContent({ value: item.linear_value as string })
+            return
+          }
+
+          if (item.linear_type === 'states') {
+            setContext({
+              ...context,
+              pluginPlayground: {
+                ...(context.pluginPlayground ?? {}),
+                linear: {
+                  ...(context?.pluginPlayground?.linear ?? {}),
+                  states: {
+                    value: [item.linear_value as string],
                     render: [{ title: item.title, color: item.color, background: item.background }]
                   }
                 }

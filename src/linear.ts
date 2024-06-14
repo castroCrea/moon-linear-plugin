@@ -284,6 +284,14 @@ export const getTeams = async ({ token }: { token: string }): Promise<Partial<Us
                         type
                     }
                 }
+                templates {
+                    nodes {
+                        id
+                        type
+                        name
+                        templateData
+                    }
+                }
                 members(filter: { active: { eq: true } }) {
                     nodes {
                         id
