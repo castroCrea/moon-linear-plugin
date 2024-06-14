@@ -97,11 +97,11 @@ export const createIssue = async (
   variables: IssueCreate, token: string
 ): Promise<false | IssueSuccess> => {
   const query = `
-    mutation CreateIssue($title: String!, $teamId: String!, $descriptionData: JSON, $assigneeId: String, $priority: Int, $stateId: String, $subscriberIds: [String!],  $cycleId: String, $projectId: String, $labelIds: [String!])  {
+    mutation CreateIssue($title: String!, $teamId: String!, $description: String, $assigneeId: String, $priority: Int, $stateId: String, $subscriberIds: [String!],  $cycleId: String, $projectId: String, $labelIds: [String!])  {
       issueCreate(input: {
         title: $title,
         teamId: $teamId
-        descriptionData: $descriptionData
+        description: $description
         assigneeId: $assigneeId
         priority: $priority
         stateId: $stateId
@@ -267,31 +267,29 @@ export const getTeams = async ({ token }: { token: string }): Promise<Partial<Us
                 id
                 name
                 color
-                labels(orderBy: updatedAt) {
-                    nodes {
-                        id
-                        name
-                        color
-                        isGroup
-                    }
-                }
-                states {
-                    nodes {
-                        id
-                        name
-                        color
-                        position
-                        type
-                    }
-                }
-                templates {
-                    nodes {
-                        id
-                        type
-                        name
-                        templateData
-                    }
-                }
+            }
+        }
+}`
+    })
+  })
+  const json = await result.json()
+  if (json.data?.teams?.nodes) {
+    return json.data.teams as Partial<UserData['teams']>
+  }
+  return {} satisfies Partial<UserData['teams']>
+}
+export const getTeamsMembers = async ({ token }: { token: string }): Promise<Partial<UserData['teams']>> => {
+  const result = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token
+    },
+    body: JSON.stringify({
+      query: `{
+        teams {
+            nodes {
+                id
                 members(filter: { active: { eq: true } }) {
                     nodes {
                         id
@@ -303,16 +301,6 @@ export const getTeams = async ({ token }: { token: string }): Promise<Partial<Us
                         statusLabel
                         active
                         isMe
-                    }
-                }
-                projects(orderBy: updatedAt) {
-                    nodes {
-                        id
-                        name
-                        icon
-                        color
-                        state
-                        url
                     }
                 }
             }
@@ -327,7 +315,7 @@ export const getTeams = async ({ token }: { token: string }): Promise<Partial<Us
   return {} satisfies Partial<UserData['teams']>
 }
 
-export const getTeamsTemplate = async ({ token }: { token: string }): Promise<
+export const getTeamsTemplatesAndStates = async ({ token }: { token: string }): Promise<
 Partial<UserData['teams']>
 > => {
   const result = await fetch(url, {
@@ -347,6 +335,100 @@ Partial<UserData['teams']>
                         type
                         name
                         templateData
+                    }
+                }
+                states {
+                    nodes {
+                        id
+                        name
+                        color
+                        position
+                        type
+                    }
+                }
+            }
+        }
+}`
+    })
+  })
+  const json = await result.json()
+  if (json.data) {
+    return json.data.teams as Partial<UserData['teams']>
+  }
+  return {} satisfies Partial<UserData['teams']>
+}
+
+export const getTeamsProjectsAndLabels = async ({ token }: { token: string }): Promise<
+Partial<UserData['teams']>
+> => {
+  const result = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token
+    },
+    body: JSON.stringify({
+      query: `{
+        teams {
+            nodes {
+                id
+                projects(orderBy: updatedAt) {
+                    nodes {
+                        id
+                        name
+                        icon
+                        color
+                        state
+                        url
+                    }
+                }
+                labels(orderBy: updatedAt) {
+                    nodes {
+                        id
+                        name
+                        color
+                        isGroup
+                    }
+                }
+            }
+        }
+}`
+    })
+  })
+  const json = await result.json()
+  if (json.data) {
+    return json.data.teams as Partial<UserData['teams']>
+  }
+  return {} satisfies Partial<UserData['teams']>
+}
+
+export const getTeamsAndCycles = async ({ token }: { token: string }): Promise<
+Partial<UserData['teams']>
+> => {
+  const result = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: token
+    },
+    body: JSON.stringify({
+      query: `{
+        teams {
+            nodes {
+                id
+                name
+                key
+                description
+                icon
+                color
+                private
+                issueCount
+                cycles(orderBy: createdAt, filter: { isPast: { eq: false } }) {
+                    nodes {
+                        id
+                        number
+                        startsAt
+                        endsAt
                     }
                 }
             }

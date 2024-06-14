@@ -1,7 +1,7 @@
 import { type Context, MoonPlugin, type MoonPluginConstructorProps, type MoonPluginSettings, type PluginSettingsDescription, type PluginMentionItem, type EndpointCallbackItem } from '@moonjot/moon'
 import { extractTitleFromMarkdown, handleConditions, handleReplacingProperties, turnDate } from '@moonjot/moon-utils'
 import { DEFAULT_TEMPLATE } from './template'
-import { createIssue, getCycles, getTeams } from './linear'
+import { createIssue, getCycles, getTeams, getTeamsAndCycles, getTeamsMembers, getTeamsProjectsAndLabels, getTeamsTemplatesAndStates } from './linear'
 import { type IssueCreate } from './linear.type'
 
 interface LinearPluginSettingsDescription extends PluginSettingsDescription {
@@ -174,13 +174,19 @@ Use $ to set Assignee and Subscriber\n`
         payload.labelIds = context.pluginPlayground?.linear?.labels?.value
       }
 
-      if (context.pluginPlayground?.linear?.assignee?.value) {
-        payload.assigneeId = context.pluginPlayground?.linear?.assignee?.value[0]
+      if (context.pluginPlayground?.linear?.assignees?.value) {
+        payload.assigneeId = context.pluginPlayground?.linear?.assignees?.value[0]
       }
 
-      if (context.pluginPlayground?.linear?.subscriber?.value) {
-        payload.subscriberIds = context.pluginPlayground?.linear?.subscriber?.value
+      if (context.pluginPlayground?.linear?.subscribers?.value) {
+        payload.subscriberIds = context.pluginPlayground?.linear?.subscribers?.value
       }
+
+      if (context.pluginPlayground?.linear?.states?.value) {
+        payload.stateId = context.pluginPlayground?.linear?.states?.value[0]
+      }
+
+      payload.description = handleConditionContent
 
       const issue = await createIssue(payload, this.settings.token)
 
@@ -200,7 +206,7 @@ Use $ to set Assignee and Subscriber\n`
         htmlClass: 'mention_collections',
         allowSpaces: true,
         getListItem: async () => {
-          const teams = await getTeams({ token: this.settings.token })
+          const teams = await getTeamsAndCycles({ token: this.settings.token })
           const teamId = this.teamId ?? this.settings.defaultTeamId ?? teams?.nodes?.[0].id
 
           const mentionTeams = teams?.nodes?.map(team => ({
@@ -219,7 +225,7 @@ Use $ to set Assignee and Subscriber\n`
             linear_value: cycle.id
           })) ?? []
 
-          // this.log?.(JSON.stringify([...mentionTeams, ...mentionCycles]))
+          this.log?.(JSON.stringify([...mentionTeams, ...mentionCycles]))
 
           return [...mentionTeams, ...mentionCycles]
         },
@@ -264,7 +270,7 @@ Use $ to set Assignee and Subscriber\n`
         htmlClass: 'mention_collections',
         allowSpaces: true,
         getListItem: async () => {
-          const teams = await getTeams({ token: this.settings.token })
+          const teams = await getTeamsProjectsAndLabels({ token: this.settings.token })
           const teamId = this.teamId ?? this.settings.defaultTeamId ?? teams?.nodes?.[0].id
 
           if (!teamId) return []
@@ -279,13 +285,11 @@ Use $ to set Assignee and Subscriber\n`
           })) ?? []
 
           const mentionProject = team?.projects?.nodes?.map(project => ({
-            title: `${project.icon} ${project.name}`,
+            title: project.name,
             linear_type: 'projects',
             background: project.color,
             linear_value: project.id
           })) ?? []
-
-          // this.log?.(JSON.stringify([...mentionProject, ...mentionLabels]))
 
           return [...mentionProject, ...mentionLabels]
         },
@@ -333,7 +337,7 @@ Use $ to set Assignee and Subscriber\n`
         htmlClass: 'mention_collections',
         allowSpaces: true,
         getListItem: async () => {
-          const teams = await getTeams({ token: this.settings.token })
+          const teams = await getTeamsMembers({ token: this.settings.token })
           const teamId = this.teamId ?? this.settings.defaultTeamId ?? teams?.nodes?.[0].id
 
           if (!teamId) return []
@@ -342,7 +346,7 @@ Use $ to set Assignee and Subscriber\n`
 
           const mentionAssignee = team?.members?.nodes?.map(person => ({
             title: `${person.displayName} - Assignee`,
-            linear_type: 'assignee',
+            linear_type: 'assignees',
             linear_value: person.id,
             logoProps: {
               logo: person.avatarUrl,
@@ -352,7 +356,7 @@ Use $ to set Assignee and Subscriber\n`
 
           const mentionSubscriber = team?.members?.nodes?.map(person => ({
             title: `${person.displayName} - Subscriber`,
-            linear_type: 'subscriber',
+            linear_type: 'subscribers',
             linear_value: person.id,
             logoProps: {
               logo: person.avatarUrl,
@@ -366,7 +370,7 @@ Use $ to set Assignee and Subscriber\n`
           { item, setContext, context, deleteMentionPlaceholder }) => {
           deleteMentionPlaceholder()
 
-          if (item.linear_type === 'assignee') {
+          if (item.linear_type === 'assignees') {
             setContext({
               ...context,
               pluginPlayground: {
@@ -380,7 +384,7 @@ Use $ to set Assignee and Subscriber\n`
                 }
               }
             })
-          } if (item.linear_type === 'subscriber') {
+          } if (item.linear_type === 'subscribers') {
             const labels = context.pluginPlayground?.linear?.labels?.value ?? []
             const label = item.linear_value as string
             const newLabels = labels.includes(label) ? labels.filter(l => l !== label) : [...labels, label]
@@ -406,7 +410,7 @@ Use $ to set Assignee and Subscriber\n`
         htmlClass: 'mention_collections',
         allowSpaces: true,
         getListItem: async () => {
-          const teams = await getTeams({ token: this.settings.token })
+          const teams = await getTeamsTemplatesAndStates({ token: this.settings.token })
           const teamId = this.teamId ?? this.settings.defaultTeamId ?? teams?.nodes?.[0].id
 
           if (!teamId) return []
@@ -420,7 +424,7 @@ Use $ to set Assignee and Subscriber\n`
           })) ?? []
 
           const mentionStates = team?.states?.nodes?.map(state => ({
-            title: state.type,
+            title: state.name,
             linear_type: 'states',
             color: state.color,
             linear_value: state.id

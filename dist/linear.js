@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCycles = exports.createAttachments = exports.getPriorityValues = exports.getTeamsTemplate = exports.getTeams = exports.getMe = exports.updateAnIssue = exports.createIssue = exports.createALabel = exports.searchAnIssue = void 0;
+exports.getCycles = exports.createAttachments = exports.getPriorityValues = exports.getTeamsAndCycles = exports.getTeamsProjectsAndLabels = exports.getTeamsTemplatesAndStates = exports.getTeamsMembers = exports.getTeams = exports.getMe = exports.updateAnIssue = exports.createIssue = exports.createALabel = exports.searchAnIssue = void 0;
 const url = 'https://api.linear.app/graphql';
 const searchAnIssue = ({ query }, token) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield fetch(url, {
@@ -90,11 +90,11 @@ const createALabel = (variables, token) => __awaiter(void 0, void 0, void 0, fun
 exports.createALabel = createALabel;
 const createIssue = (variables, token) => __awaiter(void 0, void 0, void 0, function* () {
     const query = `
-    mutation CreateIssue($title: String!, $teamId: String!, $descriptionData: JSON, $assigneeId: String, $priority: Int, $stateId: String, $subscriberIds: [String!],  $cycleId: String, $projectId: String, $labelIds: [String!])  {
+    mutation CreateIssue($title: String!, $teamId: String!, $description: String, $assigneeId: String, $priority: Int, $stateId: String, $subscriberIds: [String!],  $cycleId: String, $projectId: String, $labelIds: [String!])  {
       issueCreate(input: {
         title: $title,
         teamId: $teamId
-        descriptionData: $descriptionData
+        description: $description
         assigneeId: $assigneeId
         priority: $priority
         stateId: $stateId
@@ -258,31 +258,31 @@ const getTeams = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
                 id
                 name
                 color
-                labels(orderBy: updatedAt) {
-                    nodes {
-                        id
-                        name
-                        color
-                        isGroup
-                    }
-                }
-                states {
-                    nodes {
-                        id
-                        name
-                        color
-                        position
-                        type
-                    }
-                }
-                templates {
-                    nodes {
-                        id
-                        type
-                        name
-                        templateData
-                    }
-                }
+            }
+        }
+}`
+        })
+    });
+    const json = yield result.json();
+    if ((_c = (_b = json.data) === null || _b === void 0 ? void 0 : _b.teams) === null || _c === void 0 ? void 0 : _c.nodes) {
+        return json.data.teams;
+    }
+    return {};
+});
+exports.getTeams = getTeams;
+const getTeamsMembers = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _d, _e;
+    const result = yield fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: token
+        },
+        body: JSON.stringify({
+            query: `{
+        teams {
+            nodes {
+                id
                 members(filter: { active: { eq: true } }) {
                     nodes {
                         id
@@ -296,29 +296,19 @@ const getTeams = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
                         isMe
                     }
                 }
-                projects(orderBy: updatedAt) {
-                    nodes {
-                        id
-                        name
-                        icon
-                        color
-                        state
-                        url
-                    }
-                }
             }
         }
 }`
         })
     });
     const json = yield result.json();
-    if ((_c = (_b = json.data) === null || _b === void 0 ? void 0 : _b.teams) === null || _c === void 0 ? void 0 : _c.nodes) {
+    if ((_e = (_d = json.data) === null || _d === void 0 ? void 0 : _d.teams) === null || _e === void 0 ? void 0 : _e.nodes) {
         return json.data.teams;
     }
     return {};
 });
-exports.getTeams = getTeams;
-const getTeamsTemplate = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getTeamsMembers = getTeamsMembers;
+const getTeamsTemplatesAndStates = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield fetch(url, {
         method: 'POST',
         headers: {
@@ -338,6 +328,15 @@ const getTeamsTemplate = ({ token }) => __awaiter(void 0, void 0, void 0, functi
                         templateData
                     }
                 }
+                states {
+                    nodes {
+                        id
+                        name
+                        color
+                        position
+                        type
+                    }
+                }
             }
         }
 }`
@@ -349,7 +348,88 @@ const getTeamsTemplate = ({ token }) => __awaiter(void 0, void 0, void 0, functi
     }
     return {};
 });
-exports.getTeamsTemplate = getTeamsTemplate;
+exports.getTeamsTemplatesAndStates = getTeamsTemplatesAndStates;
+const getTeamsProjectsAndLabels = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: token
+        },
+        body: JSON.stringify({
+            query: `{
+        teams {
+            nodes {
+                id
+                projects(orderBy: updatedAt) {
+                    nodes {
+                        id
+                        name
+                        icon
+                        color
+                        state
+                        url
+                    }
+                }
+                labels(orderBy: updatedAt) {
+                    nodes {
+                        id
+                        name
+                        color
+                        isGroup
+                    }
+                }
+            }
+        }
+}`
+        })
+    });
+    const json = yield result.json();
+    if (json.data) {
+        return json.data.teams;
+    }
+    return {};
+});
+exports.getTeamsProjectsAndLabels = getTeamsProjectsAndLabels;
+const getTeamsAndCycles = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: token
+        },
+        body: JSON.stringify({
+            query: `{
+        teams {
+            nodes {
+                id
+                name
+                key
+                description
+                icon
+                color
+                private
+                issueCount
+                cycles(orderBy: createdAt, filter: { isPast: { eq: false } }) {
+                    nodes {
+                        id
+                        number
+                        startsAt
+                        endsAt
+                    }
+                }
+            }
+        }
+}`
+        })
+    });
+    const json = yield result.json();
+    if (json.data) {
+        return json.data.teams;
+    }
+    return {};
+});
+exports.getTeamsAndCycles = getTeamsAndCycles;
 const getPriorityValues = ({ token }) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield fetch(url, {
         method: 'POST',

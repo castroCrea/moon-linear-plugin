@@ -21,7 +21,16 @@ export declare const getMe: ({ token }: {
 export declare const getTeams: ({ token }: {
     token: string;
 }) => Promise<Partial<UserData['teams']>>;
-export declare const getTeamsTemplate: ({ token }: {
+export declare const getTeamsMembers: ({ token }: {
+    token: string;
+}) => Promise<Partial<UserData['teams']>>;
+export declare const getTeamsTemplatesAndStates: ({ token }: {
+    token: string;
+}) => Promise<Partial<UserData['teams']>>;
+export declare const getTeamsProjectsAndLabels: ({ token }: {
+    token: string;
+}) => Promise<Partial<UserData['teams']>>;
+export declare const getTeamsAndCycles: ({ token }: {
     token: string;
 }) => Promise<Partial<UserData['teams']>>;
 export interface Priority {

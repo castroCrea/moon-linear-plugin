@@ -75,7 +75,7 @@ class default_1 extends moon_1.MoonPlugin {
         this.endpointCallbacks = [ENDPOINT];
         this.integration = {
             callback: ({ context, markdown }) => __awaiter(this, void 0, void 0, function* () {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15;
                 if (!this.settings.defaultTeamId)
                     return false;
                 const handleDateContent = (0, moon_utils_1.turnDate)({ content: this.settings.template });
@@ -87,13 +87,13 @@ class default_1 extends moon_1.MoonPlugin {
                     handleConditionContent = handleConditionContent.split('\n').slice(1).join('\n');
                 const title = (_d = titleFromMarkdown !== null && titleFromMarkdown !== void 0 ? titleFromMarkdown : handleConditionContent.split('\n')[0]) !== null && _d !== void 0 ? _d : context.source.title;
                 const getTeamId = () => __awaiter(this, void 0, void 0, function* () {
-                    var _10, _11, _12, _13, _14, _15, _16;
-                    if ((_12 = (_11 = (_10 = context.pluginPlayground) === null || _10 === void 0 ? void 0 : _10.linear) === null || _11 === void 0 ? void 0 : _11.teams) === null || _12 === void 0 ? void 0 : _12.value) {
-                        return (_15 = (_14 = (_13 = context.pluginPlayground) === null || _13 === void 0 ? void 0 : _13.linear) === null || _14 === void 0 ? void 0 : _14.teams) === null || _15 === void 0 ? void 0 : _15.value[0];
+                    var _16, _17, _18, _19, _20, _21, _22;
+                    if ((_18 = (_17 = (_16 = context.pluginPlayground) === null || _16 === void 0 ? void 0 : _16.linear) === null || _17 === void 0 ? void 0 : _17.teams) === null || _18 === void 0 ? void 0 : _18.value) {
+                        return (_21 = (_20 = (_19 = context.pluginPlayground) === null || _19 === void 0 ? void 0 : _19.linear) === null || _20 === void 0 ? void 0 : _20.teams) === null || _21 === void 0 ? void 0 : _21.value[0];
                     }
                     else {
                         const teams = yield (0, linear_1.getTeams)({ token: this.settings.token });
-                        const team = (_16 = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _16 === void 0 ? void 0 : _16[0];
+                        const team = (_22 = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _22 === void 0 ? void 0 : _22[0];
                         this.teamId = team === null || team === void 0 ? void 0 : team.id;
                         return team === null || team === void 0 ? void 0 : team.id;
                     }
@@ -115,12 +115,16 @@ class default_1 extends moon_1.MoonPlugin {
                 if ((_u = (_t = (_s = context.pluginPlayground) === null || _s === void 0 ? void 0 : _s.linear) === null || _t === void 0 ? void 0 : _t.labels) === null || _u === void 0 ? void 0 : _u.value) {
                     payload.labelIds = (_x = (_w = (_v = context.pluginPlayground) === null || _v === void 0 ? void 0 : _v.linear) === null || _w === void 0 ? void 0 : _w.labels) === null || _x === void 0 ? void 0 : _x.value;
                 }
-                if ((_0 = (_z = (_y = context.pluginPlayground) === null || _y === void 0 ? void 0 : _y.linear) === null || _z === void 0 ? void 0 : _z.assignee) === null || _0 === void 0 ? void 0 : _0.value) {
-                    payload.assigneeId = (_3 = (_2 = (_1 = context.pluginPlayground) === null || _1 === void 0 ? void 0 : _1.linear) === null || _2 === void 0 ? void 0 : _2.assignee) === null || _3 === void 0 ? void 0 : _3.value[0];
+                if ((_0 = (_z = (_y = context.pluginPlayground) === null || _y === void 0 ? void 0 : _y.linear) === null || _z === void 0 ? void 0 : _z.assignees) === null || _0 === void 0 ? void 0 : _0.value) {
+                    payload.assigneeId = (_3 = (_2 = (_1 = context.pluginPlayground) === null || _1 === void 0 ? void 0 : _1.linear) === null || _2 === void 0 ? void 0 : _2.assignees) === null || _3 === void 0 ? void 0 : _3.value[0];
                 }
-                if ((_6 = (_5 = (_4 = context.pluginPlayground) === null || _4 === void 0 ? void 0 : _4.linear) === null || _5 === void 0 ? void 0 : _5.subscriber) === null || _6 === void 0 ? void 0 : _6.value) {
-                    payload.subscriberIds = (_9 = (_8 = (_7 = context.pluginPlayground) === null || _7 === void 0 ? void 0 : _7.linear) === null || _8 === void 0 ? void 0 : _8.subscriber) === null || _9 === void 0 ? void 0 : _9.value;
+                if ((_6 = (_5 = (_4 = context.pluginPlayground) === null || _4 === void 0 ? void 0 : _4.linear) === null || _5 === void 0 ? void 0 : _5.subscribers) === null || _6 === void 0 ? void 0 : _6.value) {
+                    payload.subscriberIds = (_9 = (_8 = (_7 = context.pluginPlayground) === null || _7 === void 0 ? void 0 : _7.linear) === null || _8 === void 0 ? void 0 : _8.subscribers) === null || _9 === void 0 ? void 0 : _9.value;
                 }
+                if ((_12 = (_11 = (_10 = context.pluginPlayground) === null || _10 === void 0 ? void 0 : _10.linear) === null || _11 === void 0 ? void 0 : _11.states) === null || _12 === void 0 ? void 0 : _12.value) {
+                    payload.stateId = (_15 = (_14 = (_13 = context.pluginPlayground) === null || _13 === void 0 ? void 0 : _13.linear) === null || _14 === void 0 ? void 0 : _14.states) === null || _15 === void 0 ? void 0 : _15.value[0];
+                }
+                payload.description = handleConditionContent;
                 const issue = yield (0, linear_1.createIssue)(payload, this.settings.token);
                 if (!issue)
                     return false;
@@ -138,8 +142,8 @@ class default_1 extends moon_1.MoonPlugin {
                     htmlClass: 'mention_collections',
                     allowSpaces: true,
                     getListItem: () => __awaiter(this, void 0, void 0, function* () {
-                        var _a, _b, _c, _d, _e, _f;
-                        const teams = yield (0, linear_1.getTeams)({ token: this.settings.token });
+                        var _a, _b, _c, _d, _e, _f, _g;
+                        const teams = yield (0, linear_1.getTeamsAndCycles)({ token: this.settings.token });
                         const teamId = (_b = (_a = this.teamId) !== null && _a !== void 0 ? _a : this.settings.defaultTeamId) !== null && _b !== void 0 ? _b : (_c = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _c === void 0 ? void 0 : _c[0].id;
                         const mentionTeams = (_e = (_d = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _d === void 0 ? void 0 : _d.map(team => ({
                             title: team.name,
@@ -155,7 +159,7 @@ class default_1 extends moon_1.MoonPlugin {
                             linear_type: 'cycles',
                             linear_value: cycle.id
                         }))) !== null && _f !== void 0 ? _f : [];
-                        // this.log?.(JSON.stringify([...mentionTeams, ...mentionCycles]))
+                        (_g = this.log) === null || _g === void 0 ? void 0 : _g.call(this, JSON.stringify([...mentionTeams, ...mentionCycles]));
                         return [...mentionTeams, ...mentionCycles];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
@@ -181,25 +185,24 @@ class default_1 extends moon_1.MoonPlugin {
                     htmlClass: 'mention_collections',
                     allowSpaces: true,
                     getListItem: () => __awaiter(this, void 0, void 0, function* () {
-                        var _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
-                        const teams = yield (0, linear_1.getTeams)({ token: this.settings.token });
-                        const teamId = (_h = (_g = this.teamId) !== null && _g !== void 0 ? _g : this.settings.defaultTeamId) !== null && _h !== void 0 ? _h : (_j = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _j === void 0 ? void 0 : _j[0].id;
+                        var _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
+                        const teams = yield (0, linear_1.getTeamsProjectsAndLabels)({ token: this.settings.token });
+                        const teamId = (_j = (_h = this.teamId) !== null && _h !== void 0 ? _h : this.settings.defaultTeamId) !== null && _j !== void 0 ? _j : (_k = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _k === void 0 ? void 0 : _k[0].id;
                         if (!teamId)
                             return [];
-                        const team = (_k = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _k === void 0 ? void 0 : _k.find(team => team.id === teamId);
-                        const mentionLabels = (_o = (_m = (_l = team === null || team === void 0 ? void 0 : team.labels) === null || _l === void 0 ? void 0 : _l.nodes) === null || _m === void 0 ? void 0 : _m.map(label => ({
+                        const team = (_l = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _l === void 0 ? void 0 : _l.find(team => team.id === teamId);
+                        const mentionLabels = (_p = (_o = (_m = team === null || team === void 0 ? void 0 : team.labels) === null || _m === void 0 ? void 0 : _m.nodes) === null || _o === void 0 ? void 0 : _o.map(label => ({
                             title: label.name,
                             linear_type: 'label',
                             background: label.color,
                             linear_value: label.id
-                        }))) !== null && _o !== void 0 ? _o : [];
-                        const mentionProject = (_r = (_q = (_p = team === null || team === void 0 ? void 0 : team.projects) === null || _p === void 0 ? void 0 : _p.nodes) === null || _q === void 0 ? void 0 : _q.map(project => ({
-                            title: `${project.icon} ${project.name}`,
+                        }))) !== null && _p !== void 0 ? _p : [];
+                        const mentionProject = (_s = (_r = (_q = team === null || team === void 0 ? void 0 : team.projects) === null || _q === void 0 ? void 0 : _q.nodes) === null || _r === void 0 ? void 0 : _r.map(project => ({
+                            title: project.name,
                             linear_type: 'projects',
                             background: project.color,
                             linear_value: project.id
-                        }))) !== null && _r !== void 0 ? _r : [];
-                        // this.log?.(JSON.stringify([...mentionProject, ...mentionLabels]))
+                        }))) !== null && _s !== void 0 ? _s : [];
                         return [...mentionProject, ...mentionLabels];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
@@ -228,42 +231,42 @@ class default_1 extends moon_1.MoonPlugin {
                     htmlClass: 'mention_collections',
                     allowSpaces: true,
                     getListItem: () => __awaiter(this, void 0, void 0, function* () {
-                        var _s, _t, _u, _v, _w, _x, _y, _z, _0, _1;
-                        const teams = yield (0, linear_1.getTeams)({ token: this.settings.token });
-                        const teamId = (_t = (_s = this.teamId) !== null && _s !== void 0 ? _s : this.settings.defaultTeamId) !== null && _t !== void 0 ? _t : (_u = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _u === void 0 ? void 0 : _u[0].id;
+                        var _t, _u, _v, _w, _x, _y, _z, _0, _1, _2;
+                        const teams = yield (0, linear_1.getTeamsMembers)({ token: this.settings.token });
+                        const teamId = (_u = (_t = this.teamId) !== null && _t !== void 0 ? _t : this.settings.defaultTeamId) !== null && _u !== void 0 ? _u : (_v = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _v === void 0 ? void 0 : _v[0].id;
                         if (!teamId)
                             return [];
-                        const team = (_v = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _v === void 0 ? void 0 : _v.find(team => team.id === teamId);
-                        const mentionAssignee = (_y = (_x = (_w = team === null || team === void 0 ? void 0 : team.members) === null || _w === void 0 ? void 0 : _w.nodes) === null || _x === void 0 ? void 0 : _x.map(person => ({
+                        const team = (_w = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _w === void 0 ? void 0 : _w.find(team => team.id === teamId);
+                        const mentionAssignee = (_z = (_y = (_x = team === null || team === void 0 ? void 0 : team.members) === null || _x === void 0 ? void 0 : _x.nodes) === null || _y === void 0 ? void 0 : _y.map(person => ({
                             title: `${person.displayName} - Assignee`,
-                            linear_type: 'assignee',
+                            linear_type: 'assignees',
                             linear_value: person.id,
                             logoProps: {
                                 logo: person.avatarUrl,
                                 name: person.displayName
                             }
-                        }))) !== null && _y !== void 0 ? _y : [];
-                        const mentionSubscriber = (_1 = (_0 = (_z = team === null || team === void 0 ? void 0 : team.members) === null || _z === void 0 ? void 0 : _z.nodes) === null || _0 === void 0 ? void 0 : _0.map(person => ({
+                        }))) !== null && _z !== void 0 ? _z : [];
+                        const mentionSubscriber = (_2 = (_1 = (_0 = team === null || team === void 0 ? void 0 : team.members) === null || _0 === void 0 ? void 0 : _0.nodes) === null || _1 === void 0 ? void 0 : _1.map(person => ({
                             title: `${person.displayName} - Subscriber`,
-                            linear_type: 'subscriber',
+                            linear_type: 'subscribers',
                             linear_value: person.id,
                             logoProps: {
                                 logo: person.avatarUrl,
                                 name: person.displayName
                             }
-                        }))) !== null && _1 !== void 0 ? _1 : [];
+                        }))) !== null && _2 !== void 0 ? _2 : [];
                         return [...mentionAssignee, ...mentionSubscriber];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
                         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
                         deleteMentionPlaceholder();
-                        if (item.linear_type === 'assignee') {
+                        if (item.linear_type === 'assignees') {
                             setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { linear: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.linear) !== null && _c !== void 0 ? _c : {})), { assignees: {
                                             value: [item.linear_value],
                                             render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
                                         } }) }) }));
                         }
-                        if (item.linear_type === 'subscriber') {
+                        if (item.linear_type === 'subscribers') {
                             const labels = (_g = (_f = (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.linear) === null || _e === void 0 ? void 0 : _e.labels) === null || _f === void 0 ? void 0 : _f.value) !== null && _g !== void 0 ? _g : [];
                             const label = item.linear_value;
                             const newLabels = labels.includes(label) ? labels.filter(l => l !== label) : [...labels, label];
@@ -280,23 +283,23 @@ class default_1 extends moon_1.MoonPlugin {
                     htmlClass: 'mention_collections',
                     allowSpaces: true,
                     getListItem: () => __awaiter(this, void 0, void 0, function* () {
-                        var _2, _3, _4, _5, _6, _7, _8, _9, _10, _11;
-                        const teams = yield (0, linear_1.getTeams)({ token: this.settings.token });
-                        const teamId = (_3 = (_2 = this.teamId) !== null && _2 !== void 0 ? _2 : this.settings.defaultTeamId) !== null && _3 !== void 0 ? _3 : (_4 = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _4 === void 0 ? void 0 : _4[0].id;
+                        var _3, _4, _5, _6, _7, _8, _9, _10, _11, _12;
+                        const teams = yield (0, linear_1.getTeamsTemplatesAndStates)({ token: this.settings.token });
+                        const teamId = (_4 = (_3 = this.teamId) !== null && _3 !== void 0 ? _3 : this.settings.defaultTeamId) !== null && _4 !== void 0 ? _4 : (_5 = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _5 === void 0 ? void 0 : _5[0].id;
                         if (!teamId)
                             return [];
-                        const team = (_5 = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _5 === void 0 ? void 0 : _5.find(team => team.id === teamId);
-                        const mentionTemplates = (_8 = (_7 = (_6 = team === null || team === void 0 ? void 0 : team.templates) === null || _6 === void 0 ? void 0 : _6.nodes) === null || _7 === void 0 ? void 0 : _7.map(template => ({
+                        const team = (_6 = teams === null || teams === void 0 ? void 0 : teams.nodes) === null || _6 === void 0 ? void 0 : _6.find(team => team.id === teamId);
+                        const mentionTemplates = (_9 = (_8 = (_7 = team === null || team === void 0 ? void 0 : team.templates) === null || _7 === void 0 ? void 0 : _7.nodes) === null || _8 === void 0 ? void 0 : _8.map(template => ({
                             title: template.name,
                             linear_type: 'templates',
                             linear_value: template.templateData
-                        }))) !== null && _8 !== void 0 ? _8 : [];
-                        const mentionStates = (_11 = (_10 = (_9 = team === null || team === void 0 ? void 0 : team.states) === null || _9 === void 0 ? void 0 : _9.nodes) === null || _10 === void 0 ? void 0 : _10.map(state => ({
-                            title: state.type,
+                        }))) !== null && _9 !== void 0 ? _9 : [];
+                        const mentionStates = (_12 = (_11 = (_10 = team === null || team === void 0 ? void 0 : team.states) === null || _10 === void 0 ? void 0 : _10.nodes) === null || _11 === void 0 ? void 0 : _11.map(state => ({
+                            title: state.name,
                             linear_type: 'states',
                             color: state.color,
                             linear_value: state.id
-                        }))) !== null && _11 !== void 0 ? _11 : [];
+                        }))) !== null && _12 !== void 0 ? _12 : [];
                         return [...mentionTemplates, ...mentionStates];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder, editor }) => {
