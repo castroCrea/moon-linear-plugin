@@ -248,6 +248,7 @@ Use $ to set Assignee and Subscriber\n`
               }
             })
           } if (item.linear_type === 'cycles') {
+            const value = context.pluginPlayground?.linear?.cycles?.value?.[0] === item.linear_value ? [] : [item.linear_value as string]
             setContext({
               ...context,
               pluginPlayground: {
@@ -255,7 +256,7 @@ Use $ to set Assignee and Subscriber\n`
                 linear: {
                   ...(context?.pluginPlayground?.linear ?? {}),
                   cycles: {
-                    value: [item.linear_value as string],
+                    value,
                     render: [{ title: item.title, color: item.color, background: item.background }]
                   }
                 }
@@ -298,14 +299,15 @@ Use $ to set Assignee and Subscriber\n`
           deleteMentionPlaceholder()
 
           if (item.linear_type === 'projects') {
+            const value = context.pluginPlayground?.linear?.projects?.value?.[0] === item.linear_value ? [] : [item.linear_value as string]
             setContext({
               ...context,
               pluginPlayground: {
                 ...(context.pluginPlayground ?? {}),
                 linear: {
                   ...(context?.pluginPlayground?.linear ?? {}),
-                  project: {
-                    value: [item.linear_value as string],
+                  projects: {
+                    value,
                     render: [{ title: item.title, color: item.color, background: item.background }]
                   }
                 }
@@ -371,6 +373,7 @@ Use $ to set Assignee and Subscriber\n`
           deleteMentionPlaceholder()
 
           if (item.linear_type === 'assignees') {
+            const value = context.pluginPlayground?.linear?.assignees?.value?.[0] === item.linear_value ? [] : [item.linear_value as string]
             setContext({
               ...context,
               pluginPlayground: {
@@ -378,16 +381,16 @@ Use $ to set Assignee and Subscriber\n`
                 linear: {
                   ...(context?.pluginPlayground?.linear ?? {}),
                   assignees: {
-                    value: [item.linear_value as string],
+                    value,
                     render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
                   }
                 }
               }
             })
           } if (item.linear_type === 'subscribers') {
-            const labels = context.pluginPlayground?.linear?.labels?.value ?? []
-            const label = item.linear_value as string
-            const newLabels = labels.includes(label) ? labels.filter(l => l !== label) : [...labels, label]
+            const subscribers = context.pluginPlayground?.linear?.subscribers?.value ?? []
+            const subscriber = item.linear_value as string
+            const newSubscribers = subscribers.includes(subscriber) ? subscribers.filter(l => l !== subscriber) : [...subscribers, subscriber]
             setContext({
               ...context,
               pluginPlayground: {
@@ -395,7 +398,7 @@ Use $ to set Assignee and Subscriber\n`
                 linear: {
                   ...(context?.pluginPlayground?.linear ?? {}),
                   subscribers: {
-                    value: newLabels,
+                    value: newSubscribers,
                     render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
                   }
                 }
@@ -442,6 +445,7 @@ Use $ to set Assignee and Subscriber\n`
           }
 
           if (item.linear_type === 'states') {
+            const value = context.pluginPlayground?.linear?.states?.value?.[0] === item.linear_value ? [] : [item.linear_value as string]
             setContext({
               ...context,
               pluginPlayground: {
@@ -449,7 +453,7 @@ Use $ to set Assignee and Subscriber\n`
                 linear: {
                   ...(context?.pluginPlayground?.linear ?? {}),
                   states: {
-                    value: [item.linear_value as string],
+                    value,
                     render: [{ title: item.title, color: item.color, background: item.background }]
                   }
                 }

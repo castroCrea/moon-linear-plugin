@@ -163,7 +163,7 @@ class default_1 extends moon_1.MoonPlugin {
                         return [...mentionTeams, ...mentionCycles];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
-                        var _a, _b, _c, _d, _e, _f;
+                        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
                         deleteMentionPlaceholder();
                         if (item.linear_type === 'teams') {
                             setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { linear: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.linear) !== null && _c !== void 0 ? _c : {})), { teams: {
@@ -172,8 +172,9 @@ class default_1 extends moon_1.MoonPlugin {
                                         } }) }) }));
                         }
                         if (item.linear_type === 'cycles') {
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_d = context.pluginPlayground) !== null && _d !== void 0 ? _d : {})), { linear: Object.assign(Object.assign({}, ((_f = (_e = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _e === void 0 ? void 0 : _e.linear) !== null && _f !== void 0 ? _f : {})), { cycles: {
-                                            value: [item.linear_value],
+                            const value = ((_g = (_f = (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.linear) === null || _e === void 0 ? void 0 : _e.cycles) === null || _f === void 0 ? void 0 : _f.value) === null || _g === void 0 ? void 0 : _g[0]) === item.linear_value ? [] : [item.linear_value];
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_h = context.pluginPlayground) !== null && _h !== void 0 ? _h : {})), { linear: Object.assign(Object.assign({}, ((_k = (_j = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _j === void 0 ? void 0 : _j.linear) !== null && _k !== void 0 ? _k : {})), { cycles: {
+                                            value,
                                             render: [{ title: item.title, color: item.color, background: item.background }]
                                         } }) }) }));
                         }
@@ -206,19 +207,20 @@ class default_1 extends moon_1.MoonPlugin {
                         return [...mentionProject, ...mentionLabels];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
-                        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+                        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
                         deleteMentionPlaceholder();
                         if (item.linear_type === 'projects') {
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { linear: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.linear) !== null && _c !== void 0 ? _c : {})), { project: {
-                                            value: [item.linear_value],
+                            const value = ((_d = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.linear) === null || _b === void 0 ? void 0 : _b.projects) === null || _c === void 0 ? void 0 : _c.value) === null || _d === void 0 ? void 0 : _d[0]) === item.linear_value ? [] : [item.linear_value];
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_e = context.pluginPlayground) !== null && _e !== void 0 ? _e : {})), { linear: Object.assign(Object.assign({}, ((_g = (_f = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _f === void 0 ? void 0 : _f.linear) !== null && _g !== void 0 ? _g : {})), { projects: {
+                                            value,
                                             render: [{ title: item.title, color: item.color, background: item.background }]
                                         } }) }) }));
                         }
                         if (item.linear_type === 'label') {
-                            const labels = (_g = (_f = (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.linear) === null || _e === void 0 ? void 0 : _e.labels) === null || _f === void 0 ? void 0 : _f.value) !== null && _g !== void 0 ? _g : [];
+                            const labels = (_l = (_k = (_j = (_h = context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.linear) === null || _j === void 0 ? void 0 : _j.labels) === null || _k === void 0 ? void 0 : _k.value) !== null && _l !== void 0 ? _l : [];
                             const label = item.linear_value;
                             const newLabels = labels.includes(label) ? labels.filter(l => l !== label) : [...labels, label];
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_h = context.pluginPlayground) !== null && _h !== void 0 ? _h : {})), { linear: Object.assign(Object.assign({}, ((_k = (_j = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _j === void 0 ? void 0 : _j.linear) !== null && _k !== void 0 ? _k : {})), { labels: {
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_m = context.pluginPlayground) !== null && _m !== void 0 ? _m : {})), { linear: Object.assign(Object.assign({}, ((_p = (_o = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _o === void 0 ? void 0 : _o.linear) !== null && _p !== void 0 ? _p : {})), { labels: {
                                             value: newLabels,
                                             render: [{ title: item.title, color: item.color, background: item.background }]
                                         } }) }) }));
@@ -258,20 +260,21 @@ class default_1 extends moon_1.MoonPlugin {
                         return [...mentionAssignee, ...mentionSubscriber];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder }) => {
-                        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+                        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
                         deleteMentionPlaceholder();
                         if (item.linear_type === 'assignees') {
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { linear: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.linear) !== null && _c !== void 0 ? _c : {})), { assignees: {
-                                            value: [item.linear_value],
+                            const value = ((_d = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.linear) === null || _b === void 0 ? void 0 : _b.assignees) === null || _c === void 0 ? void 0 : _c.value) === null || _d === void 0 ? void 0 : _d[0]) === item.linear_value ? [] : [item.linear_value];
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_e = context.pluginPlayground) !== null && _e !== void 0 ? _e : {})), { linear: Object.assign(Object.assign({}, ((_g = (_f = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _f === void 0 ? void 0 : _f.linear) !== null && _g !== void 0 ? _g : {})), { assignees: {
+                                            value,
                                             render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
                                         } }) }) }));
                         }
                         if (item.linear_type === 'subscribers') {
-                            const labels = (_g = (_f = (_e = (_d = context.pluginPlayground) === null || _d === void 0 ? void 0 : _d.linear) === null || _e === void 0 ? void 0 : _e.labels) === null || _f === void 0 ? void 0 : _f.value) !== null && _g !== void 0 ? _g : [];
-                            const label = item.linear_value;
-                            const newLabels = labels.includes(label) ? labels.filter(l => l !== label) : [...labels, label];
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_h = context.pluginPlayground) !== null && _h !== void 0 ? _h : {})), { linear: Object.assign(Object.assign({}, ((_k = (_j = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _j === void 0 ? void 0 : _j.linear) !== null && _k !== void 0 ? _k : {})), { subscribers: {
-                                            value: newLabels,
+                            const subscribers = (_l = (_k = (_j = (_h = context.pluginPlayground) === null || _h === void 0 ? void 0 : _h.linear) === null || _j === void 0 ? void 0 : _j.subscribers) === null || _k === void 0 ? void 0 : _k.value) !== null && _l !== void 0 ? _l : [];
+                            const subscriber = item.linear_value;
+                            const newSubscribers = subscribers.includes(subscriber) ? subscribers.filter(l => l !== subscriber) : [...subscribers, subscriber];
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_m = context.pluginPlayground) !== null && _m !== void 0 ? _m : {})), { linear: Object.assign(Object.assign({}, ((_p = (_o = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _o === void 0 ? void 0 : _o.linear) !== null && _p !== void 0 ? _p : {})), { subscribers: {
+                                            value: newSubscribers,
                                             render: [{ title: item.title, color: item.color, background: item.background, logoProps: item.logoProps }]
                                         } }) }) }));
                         }
@@ -303,15 +306,16 @@ class default_1 extends moon_1.MoonPlugin {
                         return [...mentionTemplates, ...mentionStates];
                     }),
                     onSelectItem: ({ item, setContext, context, deleteMentionPlaceholder, editor }) => {
-                        var _a, _b, _c;
+                        var _a, _b, _c, _d, _e, _f, _g;
                         deleteMentionPlaceholder();
                         if (item.linear_type === 'templates') {
                             editor.commands.insertContent({ value: item.linear_value });
                             return;
                         }
                         if (item.linear_type === 'states') {
-                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_a = context.pluginPlayground) !== null && _a !== void 0 ? _a : {})), { linear: Object.assign(Object.assign({}, ((_c = (_b = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _b === void 0 ? void 0 : _b.linear) !== null && _c !== void 0 ? _c : {})), { states: {
-                                            value: [item.linear_value],
+                            const value = ((_d = (_c = (_b = (_a = context.pluginPlayground) === null || _a === void 0 ? void 0 : _a.linear) === null || _b === void 0 ? void 0 : _b.states) === null || _c === void 0 ? void 0 : _c.value) === null || _d === void 0 ? void 0 : _d[0]) === item.linear_value ? [] : [item.linear_value];
+                            setContext(Object.assign(Object.assign({}, context), { pluginPlayground: Object.assign(Object.assign({}, ((_e = context.pluginPlayground) !== null && _e !== void 0 ? _e : {})), { linear: Object.assign(Object.assign({}, ((_g = (_f = context === null || context === void 0 ? void 0 : context.pluginPlayground) === null || _f === void 0 ? void 0 : _f.linear) !== null && _g !== void 0 ? _g : {})), { states: {
+                                            value,
                                             render: [{ title: item.title, color: item.color, background: item.background }]
                                         } }) }) }));
                         }
